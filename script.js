@@ -5,7 +5,7 @@
 const WORKER_BASE = "https://fufathon-se-proxy.pajujka191.workers.dev";
 
 // cíle (můžeš si změnit)
-const MONEY_GOAL_KC = 20000;
+const MONEY_GOAL_KC = 200 000;
 const TIME_GOAL_MINUTES = 12 * 60;
 
 let lastConfettiCounter = 0;
