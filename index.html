@@ -1,85 +1,73 @@
-<!doctype html>
-<html lang="cs" data-theme="dark">
+<!DOCTYPE html>
+<html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
   <title>FUFATHON Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 🌸 STYLY -->
+  <link rel="stylesheet" href="/subathon-dashboard/style.css" />
+
+  <!-- 🎉 CONFETTI -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
+  <!-- 🌙 DARK / LIGHT TOGGLE -->
   <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv">
-    <span class="moon">🌙</span>
+    🌙
   </button>
 
+  <header class="header">
+    <h1>FUFATHON Dashboard</h1>
+    <p>veřejný přehled • cute edition</p>
+  </header>
+
   <main class="container">
-    <header class="top">
-      <div>
-        <h1>FUFATHON <span class="muted">Dashboard</span></h1>
-        <p class="subtitle">veřejný přehled • cute edition</p>
-      </div>
-    </header>
-
-    <!-- HERO TIMER -->
+    <!-- ⏱️ SUBATHON ČAS -->
     <section class="card hero">
-      <div class="hero-head">
-        <div class="hero-title">
-          <span class="icon">⏱️</span>
-          <h2>Subathon čas</h2>
+      <h2>⏱️ Subathon čas</h2>
+      <div class="live-pill">🎀 LIVE FUFATHON</div>
+
+      <div id="timer" class="timer">00 h 00 min</div>
+      <div id="endTime" class="end-time">Konec: —</div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Progress času</span>
+          <span id="timeProgressText">0%</span>
         </div>
-
-        <div class="badge-wrap">
-          <span class="badge">🎀 LIVE FUFATHON</span>
+        <div class="bar">
+          <div id="timeProgress" class="bar-fill"></div>
         </div>
-      </div>
-
-      <div class="timer">
-        <div id="timer" class="timer-big">00 h 00 min</div>
-        <div id="endTime" class="timer-sub">Konec: —</div>
-      </div>
-
-      <div class="progress-row">
-        <div class="progress-label">Progress času</div>
-        <div class="progress-right"><span id="timeProgressText">0%</span></div>
-      </div>
-      <div class="bar">
-        <div id="timeProgress" class="bar-fill"></div>
       </div>
     </section>
 
-    <!-- 3 CARDS ROW -->
-    <section class="grid grid-3">
-      <!-- MONEY -->
+    <!-- 📊 3 SLOUPCE -->
+    <div class="grid grid-3">
+      <!-- 💰 VYBRÁNO -->
       <section class="card">
-        <div class="card-head">
-          <div class="card-title">💰 <span>Vybráno</span></div>
+        <h3>💰 Vybráno</h3>
+        <div id="money" class="money-big">0 Kč</div>
+
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Cíl</span>
+            <span id="moneyProgressText">0 / 200 000 Kč</span>
+          </div>
+          <div class="bar">
+            <div id="moneyProgress" class="bar-fill"></div>
+          </div>
         </div>
 
-        <div id="money" class="money">0 Kč</div>
-
-        <div class="progress-row" style="margin-top: 14px;">
-          <div class="progress-label">Cíl</div>
-          <div class="progress-right"><span id="moneyProgressText">0 / 200 000 Kč</span></div>
-        </div>
-        <div class="bar">
-          <div id="moneyProgress" class="bar-fill"></div>
-        </div>
-
-        <div class="muted small" style="margin-top:10px;">
-          (demo tlačítka dole jen pro testování)
-        </div>
+        <p class="muted">(demo tlačítka dole jen pro testování)</p>
       </section>
 
-      <!-- GOALS -->
+      <!-- 🎯 GOALY -->
       <section class="card goals-card">
         <div class="card-head">
-          <div class="card-title">🎯 <span>Goaly</span></div>
-          <div class="card-right">
-            <span id="goalsSummary" class="pill">0 / 200 000 Kč</span>
-          </div>
+          <h3>🎯 Goaly</h3>
+          <span id="goalsSummary" class="pill">0 / 200 000 Kč</span>
         </div>
 
         <div class="goal-progress">
@@ -90,35 +78,22 @@
 
         <ul id="goalsList" class="goals-list"></ul>
 
-        <div class="muted small" style="margin-top:10px;">
+        <p class="muted small">
           💗 Milníky se automaticky označí podle vybraných Kč.
-        </div>
+        </p>
       </section>
 
-      <!-- SUBS -->
+      <!-- 🎁 SUBY -->
       <section class="card">
-        <div class="card-head">
-          <div class="card-title">🎁 <span>Suby</span></div>
-        </div>
+        <h3>🎁 Suby</h3>
 
-        <div class="subs">
-          <div class="subs-row">
-            <span>T1</span>
-            <span class="pill"><span id="t1">0</span> × (+10 min)</span>
-          </div>
-          <div class="subs-row">
-            <span>T2</span>
-            <span class="pill"><span id="t2">0</span> × (+15 min)</span>
-          </div>
-          <div class="subs-row">
-            <span>T3</span>
-            <span class="pill"><span id="t3">0</span> × (+20 min)</span>
-          </div>
-        </div>
+        <div class="sub-row">T1 <span id="t1" class="pill">0</span> × (+10 min)</div>
+        <div class="sub-row">T2 <span id="t2" class="pill">0</span> × (+15 min)</div>
+        <div class="sub-row">T3 <span id="t3" class="pill">0</span> × (+20 min)</div>
 
         <div class="rules">
-          <div class="rules-title">Pravidla</div>
-          <ul class="rules-list">
+          <h4>Pravidla</h4>
+          <ul>
             <li>💗 T1 sub = +10 min</li>
             <li>💗 T2 sub = +15 min</li>
             <li>💗 T3 sub = +20 min</li>
@@ -126,13 +101,13 @@
           </ul>
         </div>
       </section>
-    </section>
+    </div>
 
-    <!-- EVENTS -->
+    <!-- 🧾 POSLEDNÍ AKCE -->
     <section class="card">
       <div class="card-head">
-        <div class="card-title">📜 <span>Poslední akce</span></div>
-        <div class="muted small">live feed (zatím demo)</div>
+        <h3>🧾 Poslední akce</h3>
+        <span class="muted">live feed (zatím demo)</span>
       </div>
 
       <ul id="events" class="events">
@@ -140,28 +115,23 @@
       </ul>
     </section>
 
-    <!-- DEMO -->
+    <!-- 🧪 DEMO OVLÁDÁNÍ -->
     <section class="card">
-      <div class="card-head">
-        <div class="card-title">🧪 <span>Demo ovládání</span></div>
+      <h3>🧪 Demo ovládání</h3>
+      <div class="demo-buttons">
+        <button>+ T1 sub (+10 min)</button>
+        <button>+ T2 sub (+15 min)</button>
+        <button>+ T3 sub (+20 min)</button>
+        <button>+ Donate 100 Kč (+15 min)</button>
+        <button class="ghost">Reset (demo)</button>
       </div>
-
-      <div class="demo-grid">
-        <button class="btn" id="demoT1">Přidat T1 sub (+10 min) 🎉</button>
-        <button class="btn" id="demoT2">Přidat T2 sub (+15 min) 🎉</button>
-        <button class="btn" id="demoT3">Přidat T3 sub (+20 min) 🎉</button>
-        <button class="btn" id="demoDono">Přidat donate 100 Kč (+15 min)</button>
-        <button class="btn btn-ghost" id="demoReset">Reset (demo)</button>
-      </div>
-
-      <div class="muted small" style="margin-top:10px;">
-        Až budeme napojovat StreamElements, tyhle demo tlačítka nepotřebuješ.
-      </div>
+      <p class="muted small">
+        Až budeme napojovat StreamElements, tyhle demo tlačítka nebudeme potřebovat.
+      </p>
     </section>
   </main>
 
-  <!-- Confetti -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="script.js"></script>
+  <!-- 📜 SCRIPT -->
+  <script src="/subathon-dashboard/script.js"></script>
 </body>
 </html>
