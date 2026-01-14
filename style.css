@@ -174,4 +174,124 @@ h3{ font-size: 20px; }
   padding: 14px;
   border-radius: 16px;
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,25
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.rule-title{
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.rules{
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.rules li{
+  margin: 6px 0;
+}
+
+/* 🐾 srdíčka místo puntíků */
+.rules li::before{
+  content: "💗 ";
+}
+
+.section-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.events{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.events li{
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+  animation: pop 0.28s ease;
+}
+
+/* 🐾 srdíčka i u feedu */
+.events li::before{
+  content: "💗 ";
+}
+
+@keyframes pop {
+  from { transform: scale(0.97); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Demo tlačítka */
+.demo-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.btn{
+  cursor: pointer;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 800;
+  font-family: inherit;
+  color: #1a0d2a;
+  background: linear-gradient(135deg, var(--accent1), var(--accent3));
+  box-shadow: 0 10px 24px var(--soft);
+  transition: transform 0.08s ease, filter 0.2s ease;
+}
+.btn:hover{ filter: brightness(1.03); }
+.btn:active{ transform: scale(0.98); }
+
+.btn.ghost{
+  background: rgba(255,255,255,0.10);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* Theme toggle */
+.theme-toggle{
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  background: linear-gradient(135deg, var(--accent1), var(--accent2));
+  box-shadow: 0 0 18px rgba(255,154,213,0.55);
+}
+
+/* 🌙 LIGHT MODE */
+body.light{
+  --bg1: #fff0f7;
+  --bg2: #f3eaff;
+
+  --card: rgba(255,255,255,0.92);
+  --card-border: rgba(36, 12, 70, 0.08);
+
+  --text: #2b183f;
+  --muted: rgba(43, 24, 63, 0.68);
+
+  --shadow: rgba(80, 40, 150, 0.12);
+  --soft: rgba(255, 154, 213, 0.14);
+
+  --progress-bg: rgba(43,24,63,0.10);
+}
+
+body.light .btn.ghost{
+  background: rgba(43,24,63,0.06);
+  border: 1px solid rgba(43,24,63,0.10);
+}
