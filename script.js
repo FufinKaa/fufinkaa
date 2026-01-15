@@ -1,280 +1,400 @@
-// ===============================
-// FUFATHON Dashboard – script.js
-// - čte data z Cloudflare Worker /state
-// - Goaly 0 / 200 000
-// - light/dark toggle
-// - konfety při bumpConfetti
-// - demo tlačítka (fungují i bez napojení alertů)
-// ===============================
+/* =========================================================
+   FUFATHON Dashboard – script.js (copy & paste)
+   - LIVE time (HH:MM:SS)
+   - přičítání času za sub/dono (demo)
+   - TOP donátoři leaderboard
+   - goals + money progress
+   - events feed
+   - theme toggle
+   - state v localStorage
+   ========================================================= */
 
-const WORKER_BASE = "https://fufathon-se-proxy.pajujka191.workers.dev";
+const STORAGE_KEY = "fufathon_state_v1";
 
-// 🎯 CÍLE
-const MONEY_GOAL_KC = 200000;
-const TIME_GOAL_MINUTES = 12 * 60;
+// Konfigurace
+const MONEY_GOAL = 200000;
 
-// 🎯 GOALY (milníky)
+// milníky (můžeš upravit jak chceš)
 const GOALS = [
-  { amount: 5000, name: "Movie night 🎬" },
-  { amount: 10000, name: "Q&A bez cenzury 😏" },
-  { amount: 15000, name: "Horror Night 👻" },
-  { amount: 20000, name: "Jídlo podle chatu 🍕" },
-  { amount: 25000, name: "Kostým stream 🤡" },
-  { amount: 30000, name: "Just Dance 💃" },
-  { amount: 35000, name: "Lego 🧱" },
-  { amount: 40000, name: "Asijská ochutnávka 🍣" },
-  { amount: 45000, name: "Minecraft SpeedRun DUO ⛏️" },
-  { amount: 50000, name: "Karaoke stream 🎤" },
-  { amount: 55000, name: "Battle Royale Challenge 🔫" },
-  { amount: 60000, name: "Bowling 🎳" },
-  { amount: 65000, name: "Try Not To Laugh 😂" },
-  { amount: 70000, name: "Běžecký pás 🏃" },
-  { amount: 75000, name: "Drunk Stream 🍻" },
-  { amount: 80000, name: "12h Stream ve stoje 🧍" },
-  { amount: 85000, name: "Split Fiction w/ Juraj 🎮" },
-  { amount: 90000, name: "Mystery box opening 🎁" },
-  { amount: 95000, name: "Turnaj v LoLku 🏆" },
-  { amount: 100000, name: "Stodolní ve stylu ✨" },
-  { amount: 110000, name: "Motokáry 🏎️" },
-  { amount: 120000, name: "ASMR stream 🌙" },
-  { amount: 125000, name: "Bolt Tower ⚡" },
-  { amount: 130000, name: "Otužování 🧊" },
-  { amount: 140000, name: "MiniGolf ⛳" },
-  { amount: 150000, name: "Vířivka ♨️" },
-  { amount: 160000, name: "Zážitkové ART studio 🎨" },
-  { amount: 170000, name: "Jízda na koni 🐴" },
-  { amount: 180000, name: "Výšlap na Lysou horu 🥾" },
-  { amount: 190000, name: "Tetování 🖋️" },
-  { amount: 200000, name: "Víkend v Praze 🏙️" },
+  { amount: 1000, label: "1 000 Kč – zatočím kolem výzev 🎡" },
+  { amount: 2500, label: "2 500 Kč – make-up challenge 💄" },
+  { amount: 5000, label: "5 000 Kč – IRL mini blok (pečení / snack test) 🍪" },
+  { amount: 7500, label: "7 500 Kč – giveaway 🎁" },
+  { amount: 10000, label: "10 000 Kč – boss level challenge 👑" },
+  { amount: 20000, label: "20 000 Kč – komunitní hra / special stream 🎮" },
+  { amount: 50000, label: "50 000 Kč – velká challenge 💥" },
+  { amount: 100000, label: "100 000 Kč – MEGA moment ✨" },
+  { amount: 200000, label: "200 000 Kč – FINAL BOSS 🏁" }
 ];
 
-let lastConfettiCounter = 0;
-
-// Lokální demo stav (když Worker nejede nebo alerty nejsou)
-let demoState = {
-  totalMinutes: 0,
-  totalMoneyKc: 0,
-  subs: { t1: 0, t2: 0, t3: 0 },
-  events: ["💗✨ FUFATHON je LIVE – čekám na první sub/donate 💜"],
-  bumpConfetti: 0,
+// Přičítání času
+const TIME_RULES = {
+  t1: 10 * 60,       // +10 min
+  t2: 15 * 60,       // +15 min
+  t3: 20 * 60,       // +20 min
+  donate100: 15 * 60 // +15 min za 100 Kč (demo)
 };
 
-// -------------------------------
-// Helpers
-// -------------------------------
-function formatNumber(n) {
-  return new Intl.NumberFormat("cs-CZ").format(n);
+// DOM helper
+const $ = (id) => document.getElementById(id);
+
+function now() {
+  return Date.now();
 }
-function formatMoney(n) {
-  return `${formatNumber(n)} Kč`;
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
 }
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.innerText = value;
+
+function formatHMS(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hh = Math.floor(total / 3600);
+  const mm = Math.floor((total % 3600) / 60);
+  const ss = total % 60;
+  return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
 }
-function setWidth(id, percent) {
-  const el = document.getElementById(id);
-  if (el) el.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
+
+function formatHMText(ms) {
+  const totalMin = Math.max(0, Math.floor(ms / 1000 / 60));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${pad2(h)} h ${pad2(m)} min`;
 }
-function confettiBoom() {
+
+function formatMoney(kc) {
+  return `${Number(kc).toLocaleString("cs-CZ")} Kč`;
+}
+
+function safeText(str) {
+  return String(str ?? "");
+}
+
+// ====== State ======
+function defaultState() {
+  const start = now();
+  return {
+    // čas
+    startedAt: start,
+    endsAt: start,          // “konec” v ms (přičítáme čas sem)
+    // čísla
+    money: 0,
+    t1: 0,
+    t2: 0,
+    t3: 0,
+    // feed
+    events: [
+      { ts: start, text: "💗✨ FUFATHON je LIVE – čekám na první sub/donate 💜" }
+    ],
+    // top donors
+    donors: [], // [{ user, total }]
+    // theme
+    theme: "dark"
+  };
+}
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+
+    // minimální migrace/ochrana
+    const d = defaultState();
+    return {
+      ...d,
+      ...parsed,
+      events: Array.isArray(parsed.events) ? parsed.events : d.events,
+      donors: Array.isArray(parsed.donors) ? parsed.donors : d.donors
+    };
+  } catch {
+    return defaultState();
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ====== Theme ======
+function applyTheme(theme) {
+  // pokud tvé CSS používá např. class na body, necháváme to univerzální:
+  document.body.dataset.theme = theme; // můžeš v CSS používat [data-theme="light"]...
+  const btn = $("themeToggle");
+  if (btn) btn.textContent = theme === "light" ? "☀️" : "🌙";
+  state.theme = theme;
+  saveState();
+}
+
+function toggleTheme() {
+  const next = (state.theme === "light") ? "dark" : "light";
+  applyTheme(next);
+}
+
+// ====== Events feed ======
+function pushEvent(text) {
+  const item = { ts: now(), text: safeText(text) };
+  state.events.unshift(item);
+  state.events = state.events.slice(0, 30);
+  saveState();
+  renderEvents();
+}
+
+function renderEvents() {
+  const el = $("events");
+  if (!el) return;
+
+  el.innerHTML = state.events.map(ev => {
+    const dt = new Date(ev.ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
+    return `<li><span class="muted">[${dt}]</span> ${escapeHtml(ev.text)}</li>`;
+  }).join("");
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[s]));
+}
+
+// ====== TOP donors ======
+function addDonation(user, amountKc) {
+  const name = (user || "Anonym").trim();
+  const amt = Number(amountKc) || 0;
+  if (amt <= 0) return;
+
+  const found = state.donors.find(d => d.user.toLowerCase() === name.toLowerCase());
+  if (found) found.total += amt;
+  else state.donors.push({ user: name, total: amt });
+
+  state.donors.sort((a, b) => b.total - a.total);
+  state.donors = state.donors.slice(0, 10);
+
+  saveState();
+  renderTopDonors();
+}
+
+function renderTopDonors() {
+  const el = $("topDonors");
+  if (!el) return;
+
+  if (!state.donors.length) {
+    el.innerHTML = `<li class="muted">Zatím nikdo… první top donátor budeš ty? 💗</li>`;
+    return;
+  }
+
+  el.innerHTML = state.donors.map((d, i) => `
+    <li>
+      <span>${i + 1}. ${escapeHtml(d.user)}</span>
+      <span class="amt">${Number(d.total).toLocaleString("cs-CZ")} Kč</span>
+    </li>
+  `).join("");
+}
+
+// ====== Time ======
+function addSeconds(sec) {
+  const add = Number(sec) || 0;
+  if (add <= 0) return;
+
+  // pokud endsAt je v minulosti, necháme ho nejdřív "dorovnat" na teď,
+  // aby přičítání dávalo smysl i když timer doběhl
+  if (state.endsAt < now()) state.endsAt = now();
+
+  state.endsAt += add * 1000;
+  saveState();
+  renderTime();
+}
+
+function renderTime() {
+  const remaining = state.endsAt - now();
+
+  // 1) původní formát “00 h 00 min”
+  const timerEl = $("timer");
+  if (timerEl) timerEl.textContent = formatHMText(remaining);
+
+  // 2) NOVÉ: LIVE HH:MM:SS
+  const liveEl = $("liveTime");
+  if (liveEl) liveEl.textContent = formatHMS(remaining);
+
+  // 3) konec
+  const endEl = $("endTime");
+  if (endEl) {
+    endEl.textContent = `Konec: ${state.endsAt > 0 ? new Date(state.endsAt).toLocaleString("cs-CZ") : "—"}`;
+  }
+
+  // 4) progress času (od startu do endsAt)
+  const progressEl = $("timeProgress");
+  const progressTextEl = $("timeProgressText");
+  if (progressEl && progressTextEl) {
+    const total = Math.max(1, state.endsAt - state.startedAt);
+    const done = Math.min(total, Math.max(0, now() - state.startedAt));
+    const pct = Math.round((done / total) * 100);
+    progressEl.style.width = `${pct}%`;
+    progressTextEl.textContent = `${pct}%`;
+  }
+}
+
+// ====== Money + Goals ======
+function setMoney(newMoney) {
+  state.money = Math.max(0, Number(newMoney) || 0);
+  saveState();
+  renderMoney();
+  renderGoals();
+}
+
+function addMoney(amountKc) {
+  const amt = Number(amountKc) || 0;
+  if (amt <= 0) return;
+  setMoney(state.money + amt);
+}
+
+function renderMoney() {
+  const moneyEl = $("money");
+  if (moneyEl) moneyEl.textContent = formatMoney(state.money);
+
+  const pct = Math.min(100, Math.round((state.money / MONEY_GOAL) * 100));
+  const barEl = $("moneyProgress");
+  const textEl = $("moneyProgressText");
+  if (barEl) barEl.style.width = `${pct}%`;
+  if (textEl) textEl.textContent = `${formatMoney(state.money).replace(" Kč","")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
+}
+
+function renderGoals() {
+  const summaryEl = $("goalsSummary");
+  const listEl = $("goalsList");
+  const progEl = $("goalsProgress");
+
+  if (summaryEl) summaryEl.textContent = `${state.money.toLocaleString("cs-CZ")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
+
+  const pct = Math.min(100, Math.round((state.money / MONEY_GOAL) * 100));
+  if (progEl) progEl.style.width = `${pct}%`;
+
+  if (!listEl) return;
+
+  listEl.innerHTML = GOALS.map(g => {
+    const done = state.money >= g.amount;
+    return `
+      <li class="${done ? "done" : ""}">
+        <span>${escapeHtml(g.label)}</span>
+        <span class="pill">${g.amount.toLocaleString("cs-CZ")} Kč</span>
+      </li>
+    `;
+  }).join("");
+}
+
+// ====== Subs ======
+function renderSubs() {
+  const t1 = $("t1");
+  const t2 = $("t2");
+  const t3 = $("t3");
+  if (t1) t1.textContent = String(state.t1);
+  if (t2) t2.textContent = String(state.t2);
+  if (t3) t3.textContent = String(state.t3);
+}
+
+function handleSub(tier) {
+  if (tier === 1) {
+    state.t1 += 1;
+    addSeconds(TIME_RULES.t1);
+    pushEvent(`🎁 T1 sub +10 min`);
+  } else if (tier === 2) {
+    state.t2 += 1;
+    addSeconds(TIME_RULES.t2);
+    pushEvent(`🎁 T2 sub +15 min`);
+  } else if (tier === 3) {
+    state.t3 += 1;
+    addSeconds(TIME_RULES.t3);
+    pushEvent(`🎁 T3 sub +20 min`);
+  }
+  saveState();
+  renderSubs();
+  partyConfetti();
+}
+
+function handleDonation(user, amountKc) {
+  // Přidáme peníze
+  addMoney(amountKc);
+
+  // Přičteme čas (demo: 100 Kč = +15 min; tady “škálujeme” po stovkách)
+  const hundreds = Math.floor((Number(amountKc) || 0) / 100);
+  if (hundreds > 0) {
+    addSeconds(hundreds * TIME_RULES.donate100);
+  }
+
+  // leaderboard
+  addDonation(user || "Anonym", amountKc);
+
+  // feed
+  pushEvent(`💰 Donate ${Number(amountKc).toLocaleString("cs-CZ")} Kč – děkuju! 💗`);
+
+  partyConfetti();
+}
+
+// ====== Confetti ======
+function partyConfetti() {
   if (typeof confetti !== "function") return;
   confetti({
-    particleCount: 120,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ["#ff9ad5", "#ffd6f6", "#a970ff"],
+    particleCount: 80,
+    spread: 60,
+    origin: { y: 0.6 }
   });
 }
 
-// -------------------------------
-// Theme
-// -------------------------------
-function initTheme() {
-  const saved = localStorage.getItem("fufa_theme");
-  const theme = saved === "light" || saved === "dark" ? saved : "dark";
-  document.documentElement.setAttribute("data-theme", theme);
-}
-function toggleTheme() {
-  const current = document.documentElement.getAttribute("data-theme") || "dark";
-  const next = current === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("fufa_theme", next);
-}
-
-// -------------------------------
-// Goals render
-// -------------------------------
-function renderGoals(totalMoneyKc) {
-  const goalsSummary = document.getElementById("goalsSummary");
-  const goalsProgress = document.getElementById("goalsProgress");
-  const goalsList = document.getElementById("goalsList");
-
-  if (goalsSummary) {
-    goalsSummary.innerText = `${formatNumber(totalMoneyKc)} / ${formatNumber(MONEY_GOAL_KC)} Kč`;
-  }
-
-  const pct = (totalMoneyKc / MONEY_GOAL_KC) * 100;
-  if (goalsProgress) goalsProgress.style.width = `${Math.min(Math.max(pct, 0), 100)}%`;
-
-  if (!goalsList) return;
-  goalsList.innerHTML = "";
-
-  const nextGoal = GOALS.find(g => totalMoneyKc < g.amount)?.amount ?? null;
-
-  for (const g of GOALS) {
-    const reached = totalMoneyKc >= g.amount;
-    const isNext = nextGoal !== null && g.amount === nextGoal;
-
-    const li = document.createElement("li");
-    li.className = `goal-item ${reached ? "reached" : ""} ${isNext ? "next" : ""}`;
-
-    li.innerHTML = `
-      <div class="goal-left">
-        <div class="goal-name"><span class="heart">💗</span> ${g.name}</div>
-        <div class="goal-meta">
-          <span>${reached ? "✅ splněno" : (isNext ? "✨ nejbližší" : "⏳ čeká")}</span>
-        </div>
-      </div>
-      <div class="goal-amount">${formatNumber(g.amount)} Kč</div>
-    `;
-
-    goalsList.appendChild(li);
-  }
-}
-
-// -------------------------------
-// Render state
-// -------------------------------
-function renderState(state) {
-  const totalMinutes = state.totalMinutes || 0;
-  const totalMoneyKc = state.totalMoneyKc || 0;
-
-  // timer
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  setText("timer", `${String(h).padStart(2, "0")} h ${String(m).padStart(2, "0")} min`);
-
-  // end time (od teď + totalMinutes)
-  const end = new Date(Date.now() + totalMinutes * 60000);
-  setText("endTime", "Konec: " + end.toLocaleString("cs-CZ"));
-
-  // money + subs
-  setText("money", formatMoney(totalMoneyKc));
-  setText("t1", state.subs?.t1 ?? 0);
-  setText("t2", state.subs?.t2 ?? 0);
-  setText("t3", state.subs?.t3 ?? 0);
-
-  // progress bary
-  const moneyPct = (totalMoneyKc / MONEY_GOAL_KC) * 100;
-  setWidth("moneyProgress", moneyPct);
-
-  const timePct = (totalMinutes / TIME_GOAL_MINUTES) * 100;
-  setWidth("timeProgress", timePct);
-
-  // progress texty (pokud existují)
-  const moneyText = document.getElementById("moneyProgressText");
-  if (moneyText) {
-    moneyText.innerText = `${formatNumber(totalMoneyKc)} / ${formatNumber(MONEY_GOAL_KC)} Kč`;
-  }
-  const timeText = document.getElementById("timeProgressText");
-  if (timeText) timeText.innerText = `${Math.min(timePct, 100).toFixed(0)}%`;
-
-  // events
-  const ul = document.getElementById("events");
-  if (ul && Array.isArray(state.events)) {
-    ul.innerHTML = "";
-    for (const text of state.events) {
-      const li = document.createElement("li");
-      li.textContent = text;
-      ul.appendChild(li);
-    }
-  }
-
-  // goals
-  renderGoals(totalMoneyKc);
-
-  // confetti trigger (po subu)
-  const bump = state.bumpConfetti || 0;
-  if (bump > lastConfettiCounter) {
-    confettiBoom();
-    lastConfettiCounter = bump;
-  }
-}
-
-// -------------------------------
-// Fetch from Worker
-// -------------------------------
-async function fetchState() {
-  try {
-    const res = await fetch(`${WORKER_BASE}/state`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const state = await res.json();
-    renderState(state);
-  } catch (e) {
-    // fallback (když Worker zrovna nejede)
-    renderState(demoState);
-  }
-}
-
-// -------------------------------
-// Demo buttons (bereme 5 tlačítek podle pořadí)
-// -------------------------------
-function pushEvent(text) {
-  demoState.events = [text, ...demoState.events].slice(0, 20);
-}
-
-function demoSub(tier) {
-  if (tier === 1) { demoState.subs.t1 += 1; demoState.totalMinutes += 10; pushEvent("💗 Demo – T1 sub (+10 min)"); }
-  if (tier === 2) { demoState.subs.t2 += 1; demoState.totalMinutes += 15; pushEvent("💗 Demo – T2 sub (+15 min)"); }
-  if (tier === 3) { demoState.subs.t3 += 1; demoState.totalMinutes += 20; pushEvent("💗 Demo – T3 sub (+20 min)"); }
-  demoState.bumpConfetti += 1;
-  renderState(demoState);
-  confettiBoom();
-}
-
-function demoDonate100() {
-  demoState.totalMoneyKc += 100;
-  demoState.totalMinutes += 15;
-  pushEvent("💗 Demo – donate 100 Kč (+15 min)");
-  renderState(demoState);
-}
-
-function demoReset() {
-  demoState = {
-    totalMinutes: 0,
-    totalMoneyKc: 0,
-    subs: { t1: 0, t2: 0, t3: 0 },
-    events: ["💗✨ FUFATHON je LIVE – čekám na první sub/donate 💜"],
-    bumpConfetti: 0,
-  };
-  lastConfettiCounter = 0;
-  renderState(demoState);
-}
-
-function initDemoButtons() {
+// ====== Demo buttons ======
+function bindDemoButtons() {
   const wrap = document.querySelector(".demo-buttons");
   if (!wrap) return;
 
-  const btns = Array.from(wrap.querySelectorAll("button"));
-  // očekáváme pořadí: T1, T2, T3, Donate, Reset
-  if (btns[0]) btns[0].addEventListener("click", () => demoSub(1));
-  if (btns[1]) btns[1].addEventListener("click", () => demoSub(2));
-  if (btns[2]) btns[2].addEventListener("click", () => demoSub(3));
-  if (btns[3]) btns[3].addEventListener("click", demoDonate100);
-  if (btns[4]) btns[4].addEventListener("click", demoReset);
+  wrap.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const action = btn.getAttribute("data-action");
+    if (!action) return;
+
+    if (action === "t1") return handleSub(1);
+    if (action === "t2") return handleSub(2);
+    if (action === "t3") return handleSub(3);
+
+    if (action === "donate100") {
+      // demo donor jméno – klidně si změň
+      return handleDonation("DemoDonor", 100);
+    }
+
+    if (action === "reset") {
+      state = defaultState();
+      saveState();
+      // rovnou nastavíme theme podle defaultu
+      applyTheme(state.theme);
+      renderAll();
+      pushEvent("🧪 Reset (demo) – vše vynulováno.");
+      return;
+    }
+  });
 }
 
-// -------------------------------
-// Init
-// -------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
+// ====== Init / Render ======
+function renderAll() {
+  renderTime();
+  renderMoney();
+  renderGoals();
+  renderSubs();
+  renderEvents();
+  renderTopDonors();
+}
 
-  const themeBtn = document.getElementById("themeToggle");
-  if (themeBtn) themeBtn.addEventListener("click", toggleTheme);
+function initTheme() {
+  // theme v state, ale když má user něco uloženého, použijeme to
+  applyTheme(state.theme || "dark");
 
-  initDemoButtons();
+  const btn = $("themeToggle");
+  if (btn) btn.addEventListener("click", toggleTheme);
+}
 
-  fetchState();
-  setInterval(fetchState, 5000);
-});
+// start
+initTheme();
+bindDemoButtons();
+renderAll();
+
+// Timer refresh (plynulejší LIVE HH:MM:SS)
+setInterval(renderTime, 250);
