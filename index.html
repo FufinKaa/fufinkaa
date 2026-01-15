@@ -30,6 +30,9 @@
       <div class="live-pill">🎀 LIVE FUFATHON</div>
 
       <div id="timer" class="timer">00 h 00 min</div>
+      <!-- ✅ NOVÉ: LIVE HH:MM:SS -->
+      <div id="liveTime" class="live-time">00:00:00</div>
+
       <div id="endTime" class="end-time">Konec: —</div>
 
       <div class="progress-wrap">
@@ -115,15 +118,28 @@
       </ul>
     </section>
 
+    <!-- ✅ NOVÉ: 🏆 TOP DONÁTOŘI -->
+    <section class="card">
+      <div class="card-head">
+        <h3>🏆 Top donátoři</h3>
+        <span class="muted">live (zatím demo)</span>
+      </div>
+
+      <ol id="topDonors" class="top-donors">
+        <li class="muted">Zatím nikdo… první top donátor budeš ty? 💗</li>
+      </ol>
+    </section>
+
     <!-- 🧪 DEMO OVLÁDÁNÍ -->
     <section class="card">
       <h3>🧪 Demo ovládání</h3>
       <div class="demo-buttons">
-        <button>+ T1 sub (+10 min)</button>
-        <button>+ T2 sub (+15 min)</button>
-        <button>+ T3 sub (+20 min)</button>
-        <button>+ Donate 100 Kč (+15 min)</button>
-        <button class="ghost">Reset (demo)</button>
+        <!-- ✅ NOVÉ: data-action -->
+        <button data-action="t1">+ T1 sub (+10 min)</button>
+        <button data-action="t2">+ T2 sub (+15 min)</button>
+        <button data-action="t3">+ T3 sub (+20 min)</button>
+        <button data-action="donate100">+ Donate 100 Kč (+15 min)</button>
+        <button data-action="reset" class="ghost">Reset (demo)</button>
       </div>
       <p class="muted small">
         Až budeme napojovat StreamElements, tyhle demo tlačítka nebudeme potřebovat.
