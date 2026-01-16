@@ -4,6 +4,7 @@
    - Money + Goals auto-check (z API)
    - Top supporters (z API)
    - Last actions (z API)
+   - Pause/Resume support (paused/pausedAt)
    - Cute theme toggle (lokálně uložené)
    ========================================================= */
 
@@ -18,14 +19,11 @@ const THEME_KEY = "fufathon_theme_v1";
 
 const MONEY_GOAL = 200000;
 
-// ✅ 100 Kč = 15 minut  => 1 Kč = 0.15 min => 9 sekund
-// (v REMOTE MODE tohle řeší backend, tady je to jen pro demo režim)
+// demo-only (v remote módu počítá backend)
 const DONATION_SECONDS_PER_KC = 9;
-
-// Subs time rules (fixní) (v REMOTE MODE řeší backend, tady jen pro demo)
 const SUB_MINUTES = { t1: 10, t2: 15, t3: 20 };
 
-// Goals (tvůj seznam)
+// Goals
 const GOALS = [
   { amount: 5000, label: "Movie night 🎬" },
   { amount: 10000, label: "Q&A bez cenzury 😈" },
@@ -86,10 +84,13 @@ function escapeHtml(str){
 // ---------- State ----------
 function defaultState(){
   const start = now();
-  const initialMinutes = 6 * 60; // default start: 6 hodin
+  const initialMinutes = 24 * 60; // jen fallback pro UI; reálně přepíše API
   return {
     startedAt: start,
     endsAt: start + initialMinutes * 60 * 1000,
+
+    paused: false,
+    pausedAt: null,
 
     money: 0,
     t1: 0,
@@ -101,7 +102,6 @@ function defaultState(){
     ],
 
     supporters: [],
-
     theme: "dark"
   };
 }
@@ -109,7 +109,6 @@ function defaultState(){
 let state = loadState();
 
 function loadState(){
-  // REMOTE MODE: nebereme subathon data z localStorage
   if (REMOTE_MODE) {
     const s = defaultState();
     const savedTheme = localStorage.getItem(THEME_KEY);
@@ -134,7 +133,6 @@ function loadState(){
 }
 
 function saveState(){
-  // V REMOTE MODE neukládáme subathon data do localStorage
   if (REMOTE_MODE) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -146,10 +144,7 @@ function applyTheme(theme){
   if(btn) btn.textContent = theme === "light" ? "☀️" : "🌙";
   state.theme = theme;
 
-  // theme ukládáme lokálně vždy
   try { localStorage.setItem(THEME_KEY, theme); } catch {}
-
-  // v DEMO režimu ukládáme celý state
   saveState();
 }
 
@@ -164,13 +159,6 @@ function party(){
 }
 
 // ---------- Events ----------
-function pushEvent(text){
-  state.events.unshift({ ts: now(), text });
-  state.events = state.events.slice(0, 30);
-  saveState();
-  renderEvents();
-}
-
 function renderEvents(){
   const el = $("events");
   if(!el) return;
@@ -181,28 +169,6 @@ function renderEvents(){
 }
 
 // ---------- Top supporters ----------
-function upsertSupporter(user, amountKc, addedSec){
-  const name = (user || "Anonym").trim();
-  const amt = Number(amountKc) || 0;
-  const addSec = Number(addedSec) || 0;
-
-  if(amt <= 0) return;
-
-  const found = state.supporters.find(s => s.user.toLowerCase() === name.toLowerCase());
-  if(found){
-    found.totalKc += amt;
-    found.addedSec += addSec;
-  }else{
-    state.supporters.push({ user: name, totalKc: amt, addedSec: addSec });
-  }
-
-  state.supporters.sort((a,b) => b.totalKc - a.totalKc);
-  state.supporters = state.supporters.slice(0, 10);
-
-  saveState();
-  renderSupporters();
-}
-
 function renderSupporters(){
   const body = $("supportersBody");
   if(!body) return;
@@ -229,19 +195,6 @@ function renderSupporters(){
 }
 
 // ---------- Money + Goals ----------
-function setMoney(kc){
-  state.money = Math.max(0, Number(kc) || 0);
-  saveState();
-  renderMoney();
-  renderGoals();
-}
-
-function addMoney(kc){
-  const amt = Number(kc) || 0;
-  if(amt <= 0) return;
-  setMoney(state.money + amt);
-}
-
 function renderMoney(){
   const moneyEl = $("money");
   if(moneyEl) moneyEl.textContent = formatMoney(state.money);
@@ -289,72 +242,13 @@ function renderSubs(){
   if($("t3")) $("t3").textContent = String(state.t3);
 }
 
-function addSecondsToTimer(seconds){
-  // jen demo režim
-  if (REMOTE_MODE) return;
-
-  const addSec = Number(seconds) || 0;
-  if(addSec <= 0) return;
-
-  if(state.endsAt < now()) state.endsAt = now();
-  state.endsAt += addSec * 1000;
-  saveState();
-}
-
-function addMinutesToTimer(minutes){
-  if (REMOTE_MODE) return;
-  const addMin = Number(minutes) || 0;
-  if(addMin <= 0) return;
-  addSecondsToTimer(addMin * 60);
-}
-
-function handleSub(tier){
-  if (REMOTE_MODE) return;
-
-  if(tier === 1){
-    state.t1 += 1;
-    addMinutesToTimer(SUB_MINUTES.t1);
-    pushEvent(`🎁 T1 sub (+${SUB_MINUTES.t1} min) 💗`);
-  }
-  if(tier === 2){
-    state.t2 += 1;
-    addMinutesToTimer(SUB_MINUTES.t2);
-    pushEvent(`🎁 T2 sub (+${SUB_MINUTES.t2} min) 💗`);
-  }
-  if(tier === 3){
-    state.t3 += 1;
-    addMinutesToTimer(SUB_MINUTES.t3);
-    pushEvent(`🎁 T3 sub (+${SUB_MINUTES.t3} min) 💗`);
-  }
-
-  saveState();
-  renderSubs();
-  party();
-}
-
-function handleDonation(user, amountKc){
-  if (REMOTE_MODE) return;
-
-  const amt = Number(amountKc) || 0;
-  if(amt <= 0) return;
-
-  addMoney(amt);
-
-  const addedSec = Math.round(amt * DONATION_SECONDS_PER_KC);
-  addSecondsToTimer(addedSec);
-
-  upsertSupporter(user || "Anonym", amt, addedSec);
-
-  const addedMinDisplay = Math.round(addedSec / 60);
-  pushEvent(`💰 Donate ${amt.toLocaleString("cs-CZ")} Kč (+${addedMinDisplay} min) – děkuju! 💜`);
-
-  party();
-}
-
-// ---------- Time render ----------
+// ---------- Time render (PAUSE AWARE) ----------
 function renderTime(){
-  const leftMs = state.endsAt - now();
-  const liveMs = now() - state.startedAt;
+  const nowMs = now();
+  const effectiveNowMs = (state.paused && state.pausedAt) ? state.pausedAt : nowMs;
+
+  const leftMs = state.endsAt - effectiveNowMs;
+  const liveMs = effectiveNowMs - state.startedAt;
 
   const leftEl = $("timeLeftHMS");
   const liveEl = $("timeLiveHMS");
@@ -366,8 +260,8 @@ function renderTime(){
   if(endEl) endEl.textContent = `Konec: ${new Date(state.endsAt).toLocaleString("cs-CZ")}`;
   if(startEl) startEl.textContent = `Start: ${new Date(state.startedAt).toLocaleString("cs-CZ")}`;
 
-  const elapsed = Math.max(0, now() - state.startedAt);
-  const remaining = Math.max(0, state.endsAt - now());
+  const elapsed = Math.max(0, effectiveNowMs - state.startedAt);
+  const remaining = Math.max(0, state.endsAt - effectiveNowMs);
   const total = Math.max(1, elapsed + remaining);
   const pct = Math.round((elapsed / total) * 100);
 
@@ -375,45 +269,6 @@ function renderTime(){
   const textEl = $("timeProgressText");
   if(barEl) barEl.style.width = `${pct}%`;
   if(textEl) textEl.textContent = `${pct}%`;
-}
-
-// ---------- Demo controls ----------
-function bindDemo(){
-  if (REMOTE_MODE) return;
-
-  const wrap = document.querySelector(".demo-buttons");
-  if(!wrap) return;
-
-  wrap.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if(!btn) return;
-
-    const action = btn.getAttribute("data-action");
-    if(!action) return;
-
-    if(action === "t1") return handleSub(1);
-    if(action === "t2") return handleSub(2);
-    if(action === "t3") return handleSub(3);
-
-    if(action === "donate"){
-      const input = prompt("Kolik Kč? (100 Kč = 15 min)");
-      if(input === null) return;
-      const amt = Number(String(input).replace(",", "."));
-      if(!amt || amt <= 0) return alert("Zadej číslo > 0 🙂");
-      const name = prompt("Jméno podporovatele? (nebo nech prázdné)") || "Anonym";
-      return handleDonation(name, amt);
-    }
-
-    if(action === "reset"){
-      const ok = confirm("Resetnout demo data? (timer, money, akce, supporters)");
-      if(!ok) return;
-      state = defaultState();
-      saveState();
-      applyTheme(state.theme);
-      renderAll();
-      pushEvent("🧪 Reset (demo) – vše vynulováno.");
-    }
-  });
 }
 
 // ---------- Remote fetch ----------
@@ -426,6 +281,9 @@ async function fetchRemoteState(){
 
     state.startedAt = remote.startedAt;
     state.endsAt = remote.endsAt;
+
+    state.paused = !!remote.paused;
+    state.pausedAt = remote.pausedAt || null;
 
     state.money = remote.money || 0;
     state.t1 = remote.t1 || 0;
@@ -464,11 +322,9 @@ function renderAll(){
   applyTheme(state.theme || "dark");
   $("themeToggle")?.addEventListener("click", toggleTheme);
 
-  if(!REMOTE_MODE) bindDemo();
-
   renderAll();
 
-  // smooth timers
+  // smooth timer UI
   setInterval(renderTime, 250);
 
   if(REMOTE_MODE){
