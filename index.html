@@ -4,15 +4,10 @@
   <meta charset="UTF-8" />
   <title>FUFATHON Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="/subathon-dashboard/style.css" />
-
-  <!-- 🎉 CONFETTI -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
-  <!-- 🌙 DARK / LIGHT TOGGLE -->
   <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv">🌙</button>
 
   <header class="header">
@@ -21,42 +16,31 @@
   </header>
 
   <main class="container">
-    <!-- ⏱️ TIME CARD -->
+    <!-- ⏱️ LIVE TIME -->
     <section class="card hero">
       <div class="hero-top">
         <div>
-          <h2>⏱️ Subathon čas</h2>
+          <h2>⏱️ Jak dlouho už streamuji</h2>
           <div class="live-pill">🎀 LIVE FUFATHON</div>
         </div>
-        <div class="tiny-note muted">auto update • live timer</div>
+        <div class="tiny-note muted">auto update • live</div>
       </div>
 
       <div class="time-grid">
-        <div class="time-box">
-          <div class="time-label">Do konce zbývá</div>
-          <div id="timeLeftHMS" class="time-big">00:00:00</div>
-          <div id="endTime" class="end-time">Konec: —</div>
-        </div>
-
         <div class="time-box">
           <div class="time-label">Už streamuju</div>
           <div id="timeLiveHMS" class="time-big alt">00:00:00</div>
           <div id="startTime" class="end-time">Start: —</div>
         </div>
-      </div>
 
-      <div class="progress-wrap">
-        <div class="progress-label">
-          <span>Progress času</span>
-          <span id="timeProgressText">0%</span>
-        </div>
-        <div class="bar">
-          <div id="timeProgress" class="bar-fill"></div>
+        <div class="time-box">
+          <div class="time-label">Stav času</div>
+          <div id="pauseState" class="time-big">BĚŽÍ</div>
+          <div id="pauseInfo" class="end-time">—</div>
         </div>
       </div>
     </section>
 
-    <!-- 📊 3 columns -->
     <div class="grid grid-3">
       <!-- 💰 MONEY -->
       <section class="card">
@@ -71,9 +55,6 @@
           <div class="bar">
             <div id="moneyProgress" class="bar-fill"></div>
           </div>
-        </div>
-
-        <div class="mini-badges">
         </div>
       </section>
 
@@ -92,21 +73,13 @@
 
         <ul id="goalsList" class="goals-list"></ul>
 
-        <p class="muted small">
-          ✅ Milníky se automaticky odškrtávají podle vybraných Kč.
-        </p>
+        <p class="muted small">✅ Milníky se automaticky odškrtávají podle vybraných Kč.</p>
       </section>
 
-      <!-- 🎁 SUBS + RULES -->
+      <!-- 📜 RULES -->
       <section class="card">
-        <h3>🎁 Suby</h3>
-
-        <div class="sub-row">T1 <span id="t1" class="pill">0</span> × (+10 min)</div>
-        <div class="sub-row">T2 <span id="t2" class="pill">0</span> × (+15 min)</div>
-        <div class="sub-row">T3 <span id="t3" class="pill">0</span> × (+20 min)</div>
-
+        <h3>📜 Pravidla přidávání času</h3>
         <div class="rules">
-          <h4>Pravidla přidávání času</h4>
           <ul>
             <li>💗 T1 sub = +10 min</li>
             <li>💗 T2 sub = +15 min</li>
@@ -114,13 +87,14 @@
             <li>💗 100 Kč donate = +15 min</li>
           </ul>
         </div>
+        <p class="muted small">Pozn.: donate přičítá i za 67 Kč atd. (proporčně).</p>
       </section>
     </div>
 
     <!-- 🏆 TOP SUPPORTERS -->
     <section class="card">
       <div class="card-head">
-        <h3>🏆 Top podporovatelé</h3>
+        <h3>🏆 Top 5 podporovatelů</h3>
         <span class="muted">podle Kč celkem 💜</span>
       </div>
 
@@ -147,7 +121,7 @@
     <section class="card">
       <div class="card-head">
         <h3>🧾 Poslední akce</h3>
-        <span class="muted">suby + donates (zatím demo)</span>
+        <span class="muted">posledních 10</span>
       </div>
 
       <ul id="events" class="events">
@@ -167,16 +141,8 @@
         <a class="social tw" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">🟣 Twitch</a>
         <a class="social yt" href="https://www.youtube.com/@FufinKa" target="_blank" rel="noreferrer">▶️ YouTube</a>
       </div>
-
     </section>
-    
   </main>
-<!-- StreamElements Bridge (skrytý iframe) -->
-<iframe
-  id="seBridge"
-  style="width:1px;height:1px;opacity:0;position:absolute;left:-9999px;top:-9999px;border:0;"
-  aria-hidden="true"
-></iframe>
 
   <script src="/subathon-dashboard/script.js"></script>
 </body>
