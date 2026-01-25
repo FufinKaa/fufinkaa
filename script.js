@@ -1,3 +1,11 @@
+/* =========================================================
+   FUFATHON Dashboard – script.js (API-driven)
+   - “Jak dlouho už streamuji” (startedAt)
+   - Money + Goals auto-check
+   - Top 5 supporters (donations only)
+   - Last 10 actions (from Worker)
+   ========================================================= */
+
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
 const MONEY_GOAL = 200000;
 
@@ -40,12 +48,15 @@ const $ = (id) => document.getElementById(id);
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
-function formatHMS(sec) {
-  sec = Math.max(0, Math.floor(sec || 0));
-  const hh = Math.floor(sec / 3600);
-  const mm = Math.floor((sec % 3600) / 60);
-  const ss = sec % 60;
+function formatHMS(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hh = Math.floor(total / 3600);
+  const mm = Math.floor((total % 3600) / 60);
+  const ss = total % 60;
   return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+}
+function formatMoney(kc) {
+  return `${Number(kc || 0).toLocaleString("cs-CZ")} Kč`;
 }
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (s) => ({
@@ -57,117 +68,122 @@ function escapeHtml(str) {
   }[s]));
 }
 
-let latest = null;
+let lastState = null;
 
 async function fetchState() {
   const r = await fetch(API_STATE, { cache: "no-store" });
-  if (!r.ok) throw new Error(`API error ${r.status}`);
+  if (!r.ok) throw new Error(`API ${r.status}`);
   return r.json();
 }
 
-function renderAll(data) {
-  latest = data;
+function renderDuration(startedAt) {
+  // “Už streamuju”
+  const now = Date.now();
+  const liveMs = now - Number(startedAt || now);
+  if ($("timeLiveHMS")) $("timeLiveHMS").textContent = formatHMS(liveMs);
+  if ($("startTime")) $("startTime").textContent = `Start: ${new Date(Number(startedAt || now)).toLocaleString("cs-CZ")}`;
 
-  // --- LIVE duration
-  const liveEl = $("timeLiveHMS");
-  if (liveEl) liveEl.textContent = formatHMS(data.liveDurationSec);
+  // pokud máš v HTML “stav času” box, tak ho nastavíme na “BĚŽÍ”
+  if ($("timeLeftHMS")) $("timeLeftHMS").textContent = "—";
+  if ($("endTime")) $("endTime").textContent = "—";
+}
 
-  const startEl = $("startTime");
-  if (startEl) startEl.textContent = `Start: ${new Date(data.startedAt).toLocaleString("cs-CZ")}`;
+function renderMoneyAndGoals(money) {
+  const m = Number(money || 0);
 
-  // --- Status
-  const statusEl = $("timeLeftHMS"); // použijeme existující “pravý box” (dřív byl countdown)
-  const endEl = $("endTime");
-  if (statusEl) statusEl.textContent = data.paused ? "PAUZA" : "BĚŽÍ";
-  if (endEl) endEl.textContent = data.paused ? "⏸️ Pozastaveno" : "—";
+  if ($("money")) $("money").textContent = formatMoney(m);
 
-  // --- Money
-  const money = Number(data.money || 0);
-  const moneyEl = $("money");
-  if (moneyEl) moneyEl.textContent = `${money.toLocaleString("cs-CZ")} Kč`;
+  const pct = Math.min(100, Math.round((m / MONEY_GOAL) * 100));
+  if ($("moneyProgress")) $("moneyProgress").style.width = `${pct}%`;
+  if ($("moneyProgressText")) $("moneyProgressText").textContent = `${m.toLocaleString("cs-CZ")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
 
-  const pct = Math.min(100, Math.round((money / MONEY_GOAL) * 100));
-  const barEl = $("moneyProgress");
-  const textEl = $("moneyProgressText");
-  if (barEl) barEl.style.width = `${pct}%`;
-  if (textEl) textEl.textContent = `${money.toLocaleString("cs-CZ")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
+  if ($("goalsSummary")) $("goalsSummary").textContent = `${m.toLocaleString("cs-CZ")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
+  if ($("goalsProgress")) $("goalsProgress").style.width = `${pct}%`;
 
-  // --- Goals
-  const summaryEl = $("goalsSummary");
-  const progEl = $("goalsProgress");
   const listEl = $("goalsList");
+  if (!listEl) return;
 
-  if (summaryEl) summaryEl.textContent = `${money.toLocaleString("cs-CZ")} / ${MONEY_GOAL.toLocaleString("cs-CZ")} Kč`;
-  if (progEl) progEl.style.width = `${pct}%`;
+  const next = GOALS.find((g) => m < g.amount);
+  listEl.innerHTML = GOALS.map((g) => {
+    const reached = m >= g.amount;
+    const isNext = next && next.amount === g.amount;
+    return `
+      <li class="goal-item ${reached ? "reached" : ""} ${isNext ? "next" : ""}">
+        <div class="goal-left">
+          <div class="goal-name">${reached ? "✅" : "🎯"} ${escapeHtml(g.label)}</div>
+          <div class="goal-meta">${reached ? "splněno 💗" : (isNext ? "další na řadě ✨" : "čeká…")}</div>
+        </div>
+        <div class="goal-amount">${g.amount.toLocaleString("cs-CZ")} Kč</div>
+      </li>
+    `;
+  }).join("");
+}
 
-  if (listEl) {
-    const next = GOALS.find((g) => money < g.amount);
-    listEl.innerHTML = GOALS.map((g) => {
-      const reached = money >= g.amount;
-      const isNext = next && next.amount === g.amount;
-      return `
-        <li class="goal-item ${reached ? "reached" : ""} ${isNext ? "next" : ""}">
-          <div class="goal-left">
-            <div class="goal-name">${reached ? "✅" : "🎯"} ${escapeHtml(g.label)}</div>
-            <div class="goal-meta">${reached ? "splněno 💗" : (isNext ? "další na řadě ✨" : "čeká…")}</div>
-          </div>
-          <div class="goal-amount">${g.amount.toLocaleString("cs-CZ")} Kč</div>
-        </li>
-      `;
-    }).join("");
-  }
-
-  // --- Top 5 donors
+function renderTopDonors(topDonors) {
   const body = $("supportersBody");
-  const donors = Array.isArray(data.topDonors) ? data.topDonors : [];
-  if (body) {
-    if (!donors.length) {
-      body.innerHTML = `
-        <tr>
-          <td colspan="4" class="muted">Zatím nikdo… první top podporovatel budeš ty? 💗</td>
-        </tr>`;
-    } else {
-      body.innerHTML = donors.map((s, i) => {
-        const addedMin = Math.round((Number(s.addedSec || 0)) / 60);
-        return `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(s.user)}</td>
-            <td>${Number(s.totalKc || 0).toLocaleString("cs-CZ")} Kč</td>
-            <td>+${addedMin.toLocaleString("cs-CZ")} min</td>
-          </tr>
-        `;
-      }).join("");
-    }
+  if (!body) return;
+
+  const arr = Array.isArray(topDonors) ? topDonors : [];
+  if (!arr.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4" class="muted">Zatím nikdo… první top podporovatel budeš ty? 💗</td>
+      </tr>`;
+    return;
   }
 
-  // --- Events (last 10)
-  const evEl = $("events");
-  const evs = Array.isArray(data.lastEvents) ? data.lastEvents : [];
-  if (evEl) {
-    if (!evs.length) {
-      evEl.innerHTML = `<li>💗✨ FUFATHON je LIVE – čekám na první sub/donate 💜</li>`;
-    } else {
-      evEl.innerHTML = evs.map((ev) => {
-        const t = new Date(ev.ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
-        return `<li><span class="muted">[${t}]</span> ${escapeHtml(ev.text)}</li>`;
-      }).join("");
-    }
+  body.innerHTML = arr.map((s, i) => {
+    const addedMin = Math.round((Number(s.addedSec || 0)) / 60);
+    return `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(s.user)}</td>
+        <td>${Number(s.totalKc || 0).toLocaleString("cs-CZ")} Kč</td>
+        <td>+${addedMin.toLocaleString("cs-CZ")} min</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderEvents(lastEvents) {
+  const el = $("events");
+  if (!el) return;
+
+  const arr = Array.isArray(lastEvents) ? lastEvents : [];
+  if (!arr.length) {
+    el.innerHTML = `<li>💗✨ FUFATHON je LIVE – čekám na první sub/donate 💜</li>`;
+    return;
   }
+
+  // Worker posílá už hotový text (hezké věty)
+  el.innerHTML = arr.map((ev) => {
+    const t = new Date(ev.ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
+    return `<li><span class="muted">[${t}]</span> ${escapeHtml(ev.text)}</li>`;
+  }).join("");
 }
 
 async function tick() {
   try {
-    const data = await fetchState();
-    renderAll(data);
+    const s = await fetchState();
+    lastState = s;
+
+    renderDuration(s.startedAt);
+    renderMoneyAndGoals(s.money);
+    renderTopDonors(s.topDonors);
+    renderEvents(s.lastEvents);
   } catch (e) {
+    // když API spadne, necháme poslední známý stav a jen dál běží čas
+    if (lastState?.startedAt) renderDuration(lastState.startedAt);
     console.log("[FUFATHON] API error:", e);
   }
 }
 
 (function init() {
-  // první render hned
+  // Pokud máš theme toggle, nech ho jak máš v HTML (neměním)
+  // Jen spustíme pravidelný refresh
   tick();
-  // refresh každé 2s (rychlé, ale bezpečné)
   setInterval(tick, 2000);
+  setInterval(() => {
+    if (lastState?.startedAt) renderDuration(lastState.startedAt);
+  }, 250);
 })();
