@@ -10,15 +10,23 @@
   <div class="bgGlow"></div>
 
   <header class="wrap header">
-    <div>
+    <div class="brand">
       <h1>FUFATHON Dashboard</h1>
       <div class="sub">veřejný přehled • cute edition ✨</div>
     </div>
-    <div class="pill" id="livePill">🔴 LIVE</div>
+
+    <div class="headRight">
+      <div class="pill" id="livePill">🔴 LIVE</div>
+
+      <button class="themeBtn" id="themeBtn" type="button" aria-label="Přepnout den/noc">
+        <span class="themeIcon" id="themeIcon">🌙</span>
+        <span class="themeText" id="themeText">Noc</span>
+      </button>
+    </div>
   </header>
 
   <main class="wrap grid">
-    <!-- Čas -->
+    <!-- HERO / ČAS -->
     <section class="card hero">
       <div class="cardHead">
         <h2>⏱️ Subathon čas</h2>
@@ -31,15 +39,11 @@
           <div class="big" id="timeLeft">--:--:--</div>
           <div class="muted" id="endsAtText">Konec: —</div>
         </div>
+
         <div class="stat">
           <div class="label">Jak dlouho už streamuji</div>
           <div class="big violet" id="timeRunning">--:--:--</div>
           <div class="muted" id="startedAtText">Start: —</div>
-        </div>
-        <div class="stat">
-          <div class="label">Stav času</div>
-          <div class="big" id="timerState">—</div>
-          <div class="muted" id="timerHint">—</div>
         </div>
       </div>
 
@@ -52,11 +56,11 @@
       </div>
     </section>
 
-    <!-- Vybráno -->
-    <section class="card">
+    <!-- LEVÝ SLUPEC -->
+    <section class="card leftCol">
       <div class="cardHead">
         <h2>💰 Vybráno</h2>
-        <div class="muted">donates + (volitelně) další</div>
+        <div class="muted">donates</div>
       </div>
 
       <div class="money" id="money">0 Kč</div>
@@ -76,24 +80,26 @@
           <div class="miniVal" id="subsBreak">0 / 0 / 0</div>
         </div>
       </div>
-    </section>
 
-    <!-- Pravidla -->
-    <section class="card">
+      <div class="spacer"></div>
+
       <div class="cardHead">
         <h2>📜 Pravidla přidávání času</h2>
         <div class="muted">automaticky</div>
       </div>
+
       <ul class="rules">
         <li>💗 T1 sub = <b>+10 min</b></li>
         <li>💗 T2 sub = <b>+15 min</b></li>
         <li>💗 T3 sub = <b>+20 min</b></li>
         <li>💗 100 Kč donate = <b>+15 min</b> (poměrově)</li>
       </ul>
+
+      <div class="muted tiny">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
     </section>
 
-    <!-- Goaly -->
-    <section class="card goals">
+    <!-- STŘED -->
+    <section class="card goals midCol">
       <div class="cardHead">
         <h2>🎯 Goaly</h2>
         <div class="muted"><span id="goalHeader">0 / 200 000 Kč</span></div>
@@ -107,44 +113,40 @@
       <div class="muted tiny">✅ Milníky se automaticky odškrtávají podle vybraných Kč.</div>
     </section>
 
-    <!-- Top 5 -->
-    <section class="card wide">
-      <div class="cardHead">
-        <h2>🏆 Top 5 podporovatelů</h2>
-        <div class="muted">podle Kč celkem 💜</div>
-      </div>
-
-      <div class="table" id="topTable">
-        <!-- render -->
-      </div>
-    </section>
-
-    <!-- Poslední akce -->
-    <section class="card wide">
-      <div class="cardHead">
-        <h2>🧾 Poslední akce</h2>
-        <div class="muted">posledních 10</div>
-      </div>
-
-      <div class="feed" id="feed">
-        <!-- render -->
-      </div>
-    </section>
-
-    <!-- Socials -->
-    <section class="card wide">
+    <!-- PRAVÝ -->
+    <section class="card rightCol">
       <div class="cardHead">
         <h2>🔗 Moje socials</h2>
         <div class="muted">klikni a pošli lásku ✨</div>
       </div>
 
-      <div class="socials">
+      <div class="socialsCol">
         <a class="social ig" href="https://instagram.com/" target="_blank" rel="noreferrer">📸 Instagram</a>
         <a class="social tw" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">🟣 Twitch</a>
         <a class="social yt" href="https://youtube.com/" target="_blank" rel="noreferrer">▶️ YouTube</a>
       </div>
 
-      <div class="muted tiny">Pozn.: Twitch “LIVE” můžeme později napojit přes Twitch API (Client ID), teď je to link.</div>
+      <div class="muted tiny">
+        Twitch “LIVE” můžeme později napojit přes Twitch API (Client ID). Teď je to link.
+      </div>
+    </section>
+
+    <!-- TOP 5 -->
+    <section class="card wide">
+      <div class="cardHead">
+        <h2>🏆 Top 5 podporovatelů</h2>
+        <div class="muted">podle Kč celkem 💜</div>
+      </div>
+      <div class="table" id="topTable"></div>
+    </section>
+
+    <!-- FEED -->
+    <section class="card wide">
+      <div class="cardHead">
+        <h2>🧾 Poslední akce</h2>
+        <div class="muted">posledních 10</div>
+      </div>
+      <div class="feed" id="feed"></div>
     </section>
   </main>
 
