@@ -1,4 +1,4 @@
-const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
+const STATE_URL = "https://fufathon-api.pajujka191.workers.dev/api/state";
 
 const GOAL_TOTAL = 200000;
 
