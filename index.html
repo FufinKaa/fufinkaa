@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FUFATHON Dashboard</title>
   <link rel="stylesheet" href="./style.css" />
-  <!-- volitelné: favicon (aby zmizel 404 v konzoli) -->
-  <!-- <link rel="icon" href="./favicon.ico"> -->
 </head>
+
 <body>
-  <div class="bgGlow"></div>
+  <div class="bgGlow" aria-hidden="true"></div>
 
   <header class="wrap header">
     <div class="brand">
-      <h1>FUFATHON Dashboard</h1>
+      <h1>FUFATHON <span class="thin">Dashboard</span></h1>
+      <div class="subtitle">veřejný přehled • cute edition ✨</div>
     </div>
 
     <div class="headRight">
-      <div class="pill" id="livePill">🔴 LIVE</div>
+      <a class="pill live" id="livePill" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">
+        🔴 LIVE
+      </a>
 
       <button class="themeBtn" id="themeBtn" type="button" aria-label="Přepnout den/noc">
         <span class="themeIcon" id="themeIcon">🌙</span>
@@ -28,7 +30,7 @@
 
   <main class="wrap grid">
     <!-- HERO / ČAS -->
-    <section class="card hero">
+    <section class="card hero span-12">
       <div class="cardHead">
         <h2>⏱️ Subathon čas</h2>
         <div class="muted">auto update • live</div>
@@ -57,8 +59,8 @@
       </div>
     </section>
 
-    <!-- LEVÝ SLUPEC -->
-    <section class="card leftCol">
+    <!-- VYBRÁNO -->
+    <section class="card span-4">
       <div class="cardHead">
         <h2>💰 Vybráno</h2>
         <div class="muted">donates</div>
@@ -82,9 +84,9 @@
         </div>
       </div>
 
-      <div class="spacer"></div>
+      <div class="divider"></div>
 
-      <div class="cardHead">
+      <div class="cardHead tight">
         <h2>📜 Pravidla přidávání času</h2>
         <div class="muted">automaticky</div>
       </div>
@@ -99,10 +101,30 @@
       <div class="muted tiny">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
     </section>
 
-    <!-- STŘED -->
-    <section class="card goals midCol">
-      <div class="cardHead">
-        <h2>🎯 Goaly</h2>
+    <!-- GOALS -->
+    <section class="card goals span-5">
+      <div class="cardHead goalHeadCute">
+        <div class="goalHeadLeft">
+          <div class="goalSticker" aria-hidden="true">
+            <!-- cute inline SVG sticker -->
+            <svg viewBox="0 0 64 64" width="34" height="34">
+              <defs>
+                <linearGradient id="g" x1="0" x2="1">
+                  <stop offset="0" stop-color="rgba(255,105,180,0.95)"/>
+                  <stop offset="1" stop-color="rgba(180,130,255,0.95)"/>
+                </linearGradient>
+              </defs>
+              <path d="M32 6c8 0 14 5 14 13 0 9-9 16-14 20-5-4-14-11-14-20C18 11 24 6 32 6z" fill="url(#g)"/>
+              <circle cx="26" cy="23" r="2.2" fill="rgba(0,0,0,0.55)"/>
+              <circle cx="38" cy="23" r="2.2" fill="rgba(0,0,0,0.55)"/>
+              <path d="M26 30c4 3 8 3 12 0" stroke="rgba(0,0,0,0.45)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <circle cx="22" cy="28" r="2.5" fill="rgba(255,255,255,0.35)"/>
+              <circle cx="42" cy="28" r="2.5" fill="rgba(255,255,255,0.35)"/>
+            </svg>
+          </div>
+          <h2>🎯 Goaly</h2>
+        </div>
+
         <div class="muted"><span id="goalHeader">0 / 200 000 Kč</span></div>
       </div>
 
@@ -114,36 +136,35 @@
       <div class="muted tiny">✅ Milníky se automaticky odškrtávají podle vybraných Kč.</div>
     </section>
 
-    <!-- PRAVÝ -->
-    <section class="card rightCol">
+    <!-- SOCIALS -->
+    <section class="card span-3">
       <div class="cardHead">
         <h2>🔗 Moje socials</h2>
         <div class="muted">klikni a pošli lásku ✨</div>
       </div>
 
       <div class="socialsCol">
-        <!-- uprav si odkazy na své profily -->
         <a class="social ig" href="https://instagram.com/" target="_blank" rel="noreferrer">📸 Instagram</a>
         <a class="social tw" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">🟣 Twitch</a>
         <a class="social yt" href="https://youtube.com/" target="_blank" rel="noreferrer">▶️ YouTube</a>
       </div>
 
       <div class="muted tiny">
-        Twitch “LIVE” zatím jako link (API dopojíme později).
+        Twitch “LIVE” zatím jen jako link (API dopojíme později).
       </div>
     </section>
 
     <!-- TOP 5 -->
-    <section class="card wide">
+    <section class="card span-12">
       <div class="cardHead">
         <h2>🏆 Top 5 podporovatelů</h2>
         <div class="muted">podle Kč celkem 💜</div>
       </div>
-      <div class="table" id="topTable"></div>
+      <div class="topTable" id="topTable"></div>
     </section>
 
     <!-- FEED -->
-    <section class="card wide">
+    <section class="card span-12">
       <div class="cardHead">
         <h2>🧾 Poslední akce</h2>
         <div class="muted">posledních 10</div>
