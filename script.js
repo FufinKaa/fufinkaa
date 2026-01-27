@@ -5,12 +5,12 @@
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
 const GOAL_TOTAL = 200000;
 
-// tvoje pravidla (musí sedět s workerem)
+// pravidla subů (musí sedět s workerem)
 const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
 
-// Goals – bez dlouhých textů (jen cute název + emoji)
+// Goaly – cute, bez dlouhých textů
 const GOALS = [
-  { amount: 5000, icon:"🎬", title:"Movie night" },
+  { amount: 5000,  icon:"🎬", title:"Movie night" },
   { amount: 10000, icon:"😏", title:"Q&A bez cenzury" },
   { amount: 15000, icon:"👻", title:"Horror Night" },
   { amount: 20000, icon:"🍔", title:"Jídlo podle chatu" },
@@ -49,9 +49,7 @@ function formatKc(n) {
   const num = Number(n) || 0;
   return num.toLocaleString("cs-CZ");
 }
-
 function pad2(n) { return String(n).padStart(2, "0"); }
-
 function formatHMS(totalSec) {
   const s = Math.max(0, Math.floor(totalSec));
   const h = Math.floor(s / 3600);
@@ -59,7 +57,6 @@ function formatHMS(totalSec) {
   const sec = s % 60;
   return `${pad2(h)}:${pad2(m)}:${pad2(sec)}`;
 }
-
 function formatDateTime(ts) {
   if (!ts) return "—";
   const d = new Date(ts);
@@ -68,17 +65,35 @@ function formatDateTime(ts) {
     hour: "2-digit", minute: "2-digit",
   });
 }
-
 function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 
 function setText(id, val) {
   const el = $(id);
   if (el) el.textContent = val;
 }
-
 function setWidth(id, pct) {
   const el = $(id);
   if (el) el.style.width = `${pct}%`;
+}
+
+// --------------------
+// Theme toggle
+// --------------------
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const isLight = theme === "light";
+  setText("#themeIcon", isLight ? "☀️" : "🌙");
+  setText("#themeText", isLight ? "Den" : "Noc");
+}
+function initTheme() {
+  const saved = localStorage.getItem("fuf_theme");
+  applyTheme(saved || "dark");
+  $("#themeBtn")?.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    localStorage.setItem("fuf_theme", next);
+    applyTheme(next);
+  });
 }
 
 // --------------------
@@ -113,8 +128,8 @@ function renderGoals(money) {
 // Top donors
 // --------------------
 function renderTop(donors) {
-  const box = $("#topTable");
-  if (!box) return;
+  const tbody = $("#topTableBody");
+  if (!tbody) return;
 
   const rows = (donors || []).slice(0, 5).map((d, i) => {
     const user = String(d?.user || "Anonym");
@@ -123,23 +138,17 @@ function renderTop(donors) {
     const addedMin = Math.round(addedSec / 60);
 
     return `
-      <div class="tr">
-        <div class="td rank">${i + 1}</div>
-        <div class="td name">${user}</div>
-        <div class="td kc">${formatKc(totalKc)} Kč</div>
-        <div class="td time">+${addedMin} min</div>
-      </div>
+      <tr>
+        <td>${i + 1}</td>
+        <td>${user}</td>
+        <td>${formatKc(totalKc)} Kč</td>
+        <td>+${addedMin} min</td>
+      </tr>
     `;
   }).join("");
 
-  box.innerHTML = `
-    <div class="thead">
-      <div class="th rank">#</div>
-      <div class="th name">Jméno</div>
-      <div class="th kc">Kč celkem</div>
-      <div class="th time">Přidaný čas</div>
-    </div>
-    ${rows || `<div class="muted">Zatím nikdo… 💜</div>`}
+  tbody.innerHTML = rows || `
+    <tr><td colspan="4" class="mutedCell">Zatím nikdo… 💜</td></tr>
   `;
 }
 
@@ -162,29 +171,31 @@ function normalizeEvent(e) {
 }
 
 function eventLine(ev) {
-  const t = ev.tier ? Number(ev.tier) : null;
-  const mins = t ? (SUB_MINUTES[t] || 10) : 0;
+  const t = ev.tier ? Number(ev.tier) : 1;
+  const mins = SUB_MINUTES[t] || 10;
+
+  // pokud worker poslal hotový text, použijeme ho (legacy / system)
+  if (ev.text && (!ev.kind || ev.kind === "system")) return ev.text;
 
   if (ev.kind === "donation") {
-    // když worker posílá text, necháme ho
     return ev.text || `💰 Donate ${formatKc(ev.amountKc || 0)} Kč 💜`;
   }
 
   if (ev.kind === "sub") {
     const who = ev.sender || "Anonym";
-    return `⭐ ${who} si pořídil sub (T${t || 1}) (+${mins} min) 💗`;
+    return `⭐ ${who} si pořídil sub (T${t}) (+${mins} min) 💗`;
   }
 
   if (ev.kind === "resub") {
     const who = ev.sender || "Anonym";
     const m = ev.months ? ` (${ev.months} měs.)` : "";
-    return `🔁 ${who} resub${m} (T${t || 1}) (+${mins} min) 💗`;
+    return `🔁 ${who} resub${m} (T${t}) (+${mins} min) 💗`;
   }
 
   if (ev.kind === "gift") {
-    // sem se normálně nedostaneme (gift agregujeme), ale fallback:
     const who = ev.sender || "Anonym";
-    return `🎁 ${who} daroval sub (T${t || 1}) (+${mins} min) 💗`;
+    const c = Number(ev.count || 1);
+    return `🎁 ${who} daroval ${c}× sub (T${t}) (+${c * mins} min) 💗`;
   }
 
   return ev.text || "—";
@@ -195,21 +206,20 @@ function renderFeed(eventsRaw) {
   if (!feed) return;
 
   const events = (eventsRaw || []).map(normalizeEvent);
-
   const out = [];
-  const nowLimit = 10;
+  const limit = 10;
 
-  for (let i = 0; i < events.length && out.length < nowLimit; i++) {
+  // Agregace: po sobě jdoucí gift recipienty od stejného sender+tier v krátkém okně
+  for (let i = 0; i < events.length && out.length < limit; i++) {
     const e = events[i];
 
-    // AGREGACE: po sobě jdoucí gift eventy od stejného sender + stejný tier v krátkém okně
     if (e.kind === "gift" && e.sender) {
       const sender = e.sender;
       const tier = Number(e.tier || 1);
-      let count = 0;
+      let count = Number(e.count || 1);
 
       const baseTs = Number(e.ts || 0);
-      let j = i;
+      let j = i + 1;
 
       while (j < events.length) {
         const x = events[j];
@@ -220,50 +230,52 @@ function renderFeed(eventsRaw) {
           String(x.sender || "").toLowerCase() === String(sender).toLowerCase() &&
           Number(x.tier || 1) === tier;
 
-        // okno 45s (aby SE stihlo poslat recipienty)
-        const inWindow = Math.abs((xTs || baseTs) - baseTs) <= 45000;
+        const inWindow = Math.abs((xTs || baseTs) - baseTs) <= 60000;
 
         if (!same || !inWindow) break;
+
         count += Number(x.count || 1);
         j++;
       }
 
-      const mins = SUB_MINUTES[tier] || 10;
-      const time = e.ts ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" }) : "--:--";
-      out.push({
-        time,
-        text: `🎁 ${sender} daroval ${count}× sub (T${tier}) (+${count * mins} min) 💗`,
-      });
+      const time = e.ts
+        ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" })
+        : "--:--";
 
+      // Pokud worker poslal už purchase s count>1, tady se to hezky vykreslí rovnou.
+      out.push({ time, text: eventLine({ ...e, count }) });
       i = j - 1;
       continue;
     }
 
-    // normální event
-    const time = e.ts ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" }) : "--:--";
+    const time = e.ts
+      ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" })
+      : "--:--";
+
     out.push({ time, text: eventLine(e) });
   }
 
   feed.innerHTML = out.length
-    ? out.map((r) => `<div class="feedRow"><span class="feedTime">[${r.time}]</span><span class="feedText">${r.text}</span></div>`).join("")
+    ? out.map((r) =>
+        `<div class="feedRow">
+          <span class="feedTime">[${r.time}]</span>
+          <span class="feedText">${r.text}</span>
+        </div>`
+      ).join("")
     : `<div class="muted">Zatím nic… 💜</div>`;
 }
 
 // --------------------
 // Main render
 // --------------------
-let lastState = null;
-
 function render(state) {
-  lastState = state;
-
   const startedAt = Number(state?.startedAt) || null;
   const endsAt = Number(state?.endsAt) || null;
 
   const paused = !!state?.paused;
   const pausedAt = state?.pausedAt ? Number(state.pausedAt) : null;
 
-  // čas do konce (server už to počítá správně)
+  // do konce (server počítá)
   const remaining = Number(state?.timeRemainingSec) || 0;
   setText("#timeLeft", formatHMS(remaining));
   setText("#endsAtText", endsAt ? `Konec: ${formatDateTime(endsAt)}` : "Konec: —");
@@ -302,37 +314,12 @@ function render(state) {
   const t2 = Number(state?.t2) || 0;
   const t3 = Number(state?.t3) || 0;
   const subsTotal = Number(state?.subsTotal) || (t1 + t2 + t3);
+
   setText("#subsTotal", String(subsTotal));
   setText("#subsBreak", `${t1} / ${t2} / ${t3}`);
 
   renderGoals(money);
-  function renderTop(donors) {
-  const tbody = document.querySelector("#topTableBody");
-  if (!tbody) return;
-
-  const rows = (donors || []).slice(0, 5).map((d, i) => {
-    const user = String(d?.user || "Anonym");
-    const totalKc = Number(d?.totalKc || 0);
-    const addedSec = Number(d?.addedSec || 0);
-    const addedMin = Math.round(addedSec / 60);
-
-    return `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${user}</td>
-        <td>${formatKc(totalKc)} Kč</td>
-        <td>+${addedMin} min</td>
-      </tr>
-    `;
-  }).join("");
-
-  tbody.innerHTML = rows || `
-    <tr>
-      <td colspan="4" class="mutedCell">Zatím nikdo… 💜</td>
-    </tr>
-  `;
-}
-
+  renderTop(state?.topDonors || []);
   renderFeed(state?.lastEvents || state?.events || []);
 }
 
@@ -347,6 +334,7 @@ async function loadState() {
 }
 
 function start() {
+  initTheme();
   loadState().catch(console.error);
   setInterval(() => loadState().catch(console.error), 3000);
 }
