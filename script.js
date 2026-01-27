@@ -306,7 +306,33 @@ function render(state) {
   setText("#subsBreak", `${t1} / ${t2} / ${t3}`);
 
   renderGoals(money);
-  renderTop(state?.topDonors || []);
+  function renderTop(donors) {
+  const tbody = document.querySelector("#topTableBody");
+  if (!tbody) return;
+
+  const rows = (donors || []).slice(0, 5).map((d, i) => {
+    const user = String(d?.user || "Anonym");
+    const totalKc = Number(d?.totalKc || 0);
+    const addedSec = Number(d?.addedSec || 0);
+    const addedMin = Math.round(addedSec / 60);
+
+    return `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${user}</td>
+        <td>${formatKc(totalKc)} Kč</td>
+        <td>+${addedMin} min</td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.innerHTML = rows || `
+    <tr>
+      <td colspan="4" class="mutedCell">Zatím nikdo… 💜</td>
+    </tr>
+  `;
+}
+
   renderFeed(state?.lastEvents || state?.events || []);
 }
 
