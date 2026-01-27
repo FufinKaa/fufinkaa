@@ -381,3 +381,41 @@ h2{
   .topRow{grid-template-columns: 44px 1fr; gap:6px;}
   .topKc,.topTime{text-align:left}
 }
+
+.topTable{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+  border-radius:18px;
+}
+
+.topTable thead th{
+  text-align:left;
+  font-weight:700;
+  font-size:12px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:14px 16px;
+  color:rgba(255,255,255,.75);
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+
+.topTable tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.topTable tbody tr:last-child td{
+  border-bottom:none;
+}
+
+.topTable tbody tr:hover td{
+  background:rgba(255,255,255,.03);
+}
+
+.mutedCell{
+  color:rgba(255,255,255,.6);
+  text-align:center;
+}
+
