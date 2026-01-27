@@ -5,58 +5,52 @@
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
 const GOAL_TOTAL = 200000;
 
+// tvoje pravidla (musí sedět s workerem)
+const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
+
+// Goals – bez dlouhých textů (jen cute název + emoji)
 const GOALS = [
-  { amount: 5000, title: "Movie night" },
-  { amount: 10000, title: "Q&A bez cenzury" },
-  { amount: 15000, title: "Horror Night" },
-  { amount: 20000, title: "Jídlo podle chatu" },
-  { amount: 25000, title: "Kostým stream" },
-  { amount: 30000, title: "Just Dance" },
-  { amount: 35000, title: "Lego" },
-  { amount: 40000, title: "Asijská ochutnávka" },
-  { amount: 45000, title: "Minecraft SpeedRun DUO" },
-  { amount: 50000, title: "Karaoke stream" },
-  { amount: 55000, title: "Battle Royale Challenge" },
-  { amount: 60000, title: "Bowling" },
-  { amount: 65000, title: "Try Not To Laugh" },
-  { amount: 70000, title: "Běžecký pás" },
-  { amount: 75000, title: "Drunk Stream" },
-  { amount: 80000, title: "12h Stream ve stoje" },
-  { amount: 85000, title: "Split Fiction w/ Juraj" },
-  { amount: 90000, title: "Mystery box opening" },
-  { amount: 95000, title: "Turnaj v LoLku" },
-  { amount: 100000, title: "Stodolní ve stylu" },
-  { amount: 110000, title: "Motokáry" },
-  { amount: 120000, title: "ASMR stream" },
-  { amount: 125000, title: "Bolt Tower" },
-  { amount: 130000, title: "Otužování" },
-  { amount: 140000, title: "MiniGolf" },
-  { amount: 150000, title: "Vířivka" },
-  { amount: 160000, title: "Zážitkové ART studio" },
-  { amount: 170000, title: "Jízda na koni" },
-  { amount: 180000, title: "Výšlap na Lysou horu" },
-  { amount: 190000, title: "Tetování" },
-  { amount: 200000, title: "Víkend v Praze" },
+  { amount: 5000, icon:"🎬", title:"Movie night" },
+  { amount: 10000, icon:"😏", title:"Q&A bez cenzury" },
+  { amount: 15000, icon:"👻", title:"Horror Night" },
+  { amount: 20000, icon:"🍔", title:"Jídlo podle chatu" },
+  { amount: 25000, icon:"🤡", title:"Kostým stream" },
+  { amount: 30000, icon:"💃", title:"Just Dance" },
+  { amount: 35000, icon:"🧱", title:"Lego" },
+  { amount: 40000, icon:"🍣", title:"Asijská ochutnávka" },
+  { amount: 45000, icon:"⛏️", title:"Minecraft SpeedRun DUO" },
+  { amount: 50000, icon:"🎤", title:"Karaoke stream" },
+  { amount: 55000, icon:"🔫", title:"Battle Royale Challenge" },
+  { amount: 60000, icon:"🎳", title:"Bowling" },
+  { amount: 65000, icon:"💦", title:"Try Not To Laugh" },
+  { amount: 70000, icon:"👣", title:"Běžecký pás" },
+  { amount: 75000, icon:"🍹", title:"Drunk Stream" },
+  { amount: 80000, icon:"🧍‍♀️", title:"12h Stream ve stoje" },
+  { amount: 85000, icon:"🕹️", title:"Split Fiction w/ Juraj" },
+  { amount: 90000, icon:"🎁", title:"Mystery box opening" },
+  { amount: 95000, icon:"🏆", title:"Turnaj v LoLku" },
+  { amount: 100000, icon:"🎉", title:"Stodolní ve stylu" },
+  { amount: 110000, icon:"🏎️", title:"Motokáry" },
+  { amount: 120000, icon:"🎧", title:"ASMR stream" },
+  { amount: 125000, icon:"⚡", title:"Bolt Tower" },
+  { amount: 130000, icon:"🥶", title:"Otužování" },
+  { amount: 140000, icon:"⛳", title:"MiniGolf" },
+  { amount: 150000, icon:"🫧", title:"Vířivka" },
+  { amount: 160000, icon:"🎨", title:"Zážitkové ART studio" },
+  { amount: 170000, icon:"🐎", title:"Jízda na koni" },
+  { amount: 180000, icon:"🏔️", title:"Výšlap na Lysou horu" },
+  { amount: 190000, icon:"🖊️", title:"Tetování" },
+  { amount: 200000, icon:"🏙️", title:"Víkend v Praze" },
 ];
 
-// ----------------------------
-// Helpers
-// ----------------------------
 const $ = (sel) => document.querySelector(sel);
-
-function safeText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-}
 
 function formatKc(n) {
   const num = Number(n) || 0;
   return num.toLocaleString("cs-CZ");
 }
 
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
+function pad2(n) { return String(n).padStart(2, "0"); }
 
 function formatHMS(totalSec) {
   const s = Math.max(0, Math.floor(totalSec));
@@ -70,235 +64,265 @@ function formatDateTime(ts) {
   if (!ts) return "—";
   const d = new Date(ts);
   return d.toLocaleString("cs-CZ", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
-function clamp01(x) {
-  return Math.max(0, Math.min(1, x));
+function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+
+function setText(id, val) {
+  const el = $(id);
+  if (el) el.textContent = val;
 }
 
-function goalEmoji(title) {
-  const t = (title || "").toLowerCase();
-  if (t.includes("movie")) return "🎬";
-  if (t.includes("q&a")) return "😏";
-  if (t.includes("horror")) return "👻";
-  if (t.includes("jídlo") || t.includes("jidlo")) return "🍕";
-  if (t.includes("kostým") || t.includes("kostym")) return "🤡";
-  if (t.includes("dance")) return "💃";
-  if (t.includes("lego")) return "🧱";
-  if (t.includes("asij")) return "🍣";
-  if (t.includes("minecraft")) return "⛏️";
-  if (t.includes("karaoke")) return "🎤";
-  if (t.includes("battle")) return "🔫";
-  if (t.includes("bowling")) return "🎳";
-  if (t.includes("laugh")) return "💦";
-  if (t.includes("běžeck") || t.includes("bezeck")) return "👣";
-  if (t.includes("drunk")) return "🍹";
-  if (t.includes("stoje")) return "🧍‍♀️";
-  if (t.includes("split")) return "🕹️";
-  if (t.includes("mystery")) return "🎁";
-  if (t.includes("lol")) return "🏆";
-  if (t.includes("stodol")) return "🎉";
-  if (t.includes("motok")) return "🏎️";
-  if (t.includes("asmr")) return "🎧";
-  if (t.includes("tower")) return "⚡";
-  if (t.includes("otu")) return "🥶";
-  if (t.includes("golf")) return "⛳";
-  if (t.includes("vířiv") || t.includes("viriv")) return "🫧";
-  if (t.includes("art")) return "🎨";
-  if (t.includes("koni")) return "🐎";
-  if (t.includes("lysou")) return "🏔️";
-  if (t.includes("tet")) return "🖊️";
-  if (t.includes("praze")) return "🏙️";
-  return "🎯";
+function setWidth(id, pct) {
+  const el = $(id);
+  if (el) el.style.width = `${pct}%`;
 }
 
-// ----------------------------
-// Theme toggle
-// ----------------------------
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  const icon = $("#themeIcon");
-  const text = $("#themeText");
-  if (icon) icon.textContent = theme === "light" ? "☀️" : "🌙";
-  if (text) text.textContent = theme === "light" ? "Den" : "Noc";
-}
-
-function initTheme() {
-  const saved = localStorage.getItem("fufathon_theme");
-  const theme = saved === "light" ? "light" : "dark";
-  applyTheme(theme);
-
-  const btn = $("#themeBtn");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      const current = document.documentElement.getAttribute("data-theme") || "dark";
-      const next = current === "dark" ? "light" : "dark";
-      localStorage.setItem("fufathon_theme", next);
-      applyTheme(next);
-    });
-  }
-}
-
-// ----------------------------
-// Renderers
-// ----------------------------
+// --------------------
+// Goals
+// --------------------
 function renderGoals(money) {
+  const m = Number(money) || 0;
+
+  setText("#goalHeader", `${formatKc(m)} / ${formatKc(GOAL_TOTAL)} Kč`);
+  const gpct = Math.round(clamp01(m / GOAL_TOTAL) * 100);
+  setWidth("#goalBar", gpct);
+
   const list = $("#goalList");
   if (!list) return;
-
-  const m = Number(money) || 0;
 
   list.innerHTML = GOALS.map((g) => {
     const done = m >= g.amount;
     return `
-      <div class="goalItem ${done ? "done" : ""}">
-        <div class="goalCheck">${done ? "✅" : "⬜"}</div>
-        <div>
-          <div class="goalTitle">${goalEmoji(g.title)} ${g.title}</div>
+      <div class="goalRow ${done ? "done" : ""}">
+        <div class="goalLeft">
+          <span class="goalCheck">${done ? "✅" : "⬜"}</span>
+          <span class="goalIcon">${g.icon || "🎯"}</span>
+          <span class="goalTitle">${g.title}</span>
         </div>
-        <div class="goalKc">${formatKc(g.amount)} Kč</div>
+        <div class="goalAmt">${formatKc(g.amount)} Kč</div>
       </div>
     `;
   }).join("");
 }
 
-function renderTopDonors(topDonors) {
-  const wrap = $("#topTable");
-  if (!wrap) return;
+// --------------------
+// Top donors
+// --------------------
+function renderTop(donors) {
+  const box = $("#topTable");
+  if (!box) return;
 
-  const rows = (topDonors || []).slice(0, 5).map((d, idx) => {
+  const rows = (donors || []).slice(0, 5).map((d, i) => {
     const user = String(d?.user || "Anonym");
     const totalKc = Number(d?.totalKc || 0);
     const addedSec = Number(d?.addedSec || 0);
     const addedMin = Math.round(addedSec / 60);
+
     return `
-      <div class="topRow">
-        <div class="badge">${idx + 1}</div>
-        <div class="topName">${user}</div>
-        <div class="topKc">${formatKc(totalKc)} Kč</div>
-        <div class="topTime">+${addedMin} min</div>
+      <div class="tr">
+        <div class="td rank">${i + 1}</div>
+        <div class="td name">${user}</div>
+        <div class="td kc">${formatKc(totalKc)} Kč</div>
+        <div class="td time">+${addedMin} min</div>
       </div>
     `;
   }).join("");
 
-  wrap.innerHTML = rows || `<div class="empty">Zatím nikdo… 💜</div>`;
+  box.innerHTML = `
+    <div class="thead">
+      <div class="th rank">#</div>
+      <div class="th name">Jméno</div>
+      <div class="th kc">Kč celkem</div>
+      <div class="th time">Přidaný čas</div>
+    </div>
+    ${rows || `<div class="muted">Zatím nikdo… 💜</div>`}
+  `;
 }
 
-function renderFeed(events) {
+// --------------------
+// Feed (agregace giftů)
+// --------------------
+function normalizeEvent(e) {
+  // podporuje i legacy {text}
+  return {
+    ts: e?.ts ?? null,
+    kind: e?.kind ?? null,
+    tier: e?.tier ?? null,
+    months: e?.months ?? null,
+    count: e?.count ?? 1,
+    sender: e?.sender ?? null,
+    recipient: e?.recipient ?? null,
+    amountKc: e?.amountKc ?? null,
+    text: e?.text ?? "",
+  };
+}
+
+function eventLine(ev) {
+  const t = ev.tier ? Number(ev.tier) : null;
+  const mins = t ? (SUB_MINUTES[t] || 10) : 0;
+
+  if (ev.kind === "donation") {
+    // když worker posílá text, necháme ho
+    return ev.text || `💰 Donate ${formatKc(ev.amountKc || 0)} Kč 💜`;
+  }
+
+  if (ev.kind === "sub") {
+    const who = ev.sender || "Anonym";
+    return `⭐ ${who} si pořídil sub (T${t || 1}) (+${mins} min) 💗`;
+  }
+
+  if (ev.kind === "resub") {
+    const who = ev.sender || "Anonym";
+    const m = ev.months ? ` (${ev.months} měs.)` : "";
+    return `🔁 ${who} resub${m} (T${t || 1}) (+${mins} min) 💗`;
+  }
+
+  if (ev.kind === "gift") {
+    // sem se normálně nedostaneme (gift agregujeme), ale fallback:
+    const who = ev.sender || "Anonym";
+    return `🎁 ${who} daroval sub (T${t || 1}) (+${mins} min) 💗`;
+  }
+
+  return ev.text || "—";
+}
+
+function renderFeed(eventsRaw) {
   const feed = $("#feed");
   if (!feed) return;
 
-  const items = (events || []).slice(0, 10).map((e) => {
-    const ts = Number(e?.ts) || null;
-    const time = ts
-      ? new Date(ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })
-      : "--:--";
-    const text = String(e?.text || "").trim();
-    return `
-      <div class="feedItem">
-        <div class="feedTime">[${time}]</div>
-        <div class="feedText">${text}</div>
-      </div>
-    `;
-  }).join("");
+  const events = (eventsRaw || []).map(normalizeEvent);
 
-  feed.innerHTML = items || `<div class="empty">Zatím žádné akce… 💜</div>`;
+  const out = [];
+  const nowLimit = 10;
+
+  for (let i = 0; i < events.length && out.length < nowLimit; i++) {
+    const e = events[i];
+
+    // AGREGACE: po sobě jdoucí gift eventy od stejného sender + stejný tier v krátkém okně
+    if (e.kind === "gift" && e.sender) {
+      const sender = e.sender;
+      const tier = Number(e.tier || 1);
+      let count = 0;
+
+      const baseTs = Number(e.ts || 0);
+      let j = i;
+
+      while (j < events.length) {
+        const x = events[j];
+        const xTs = Number(x.ts || 0);
+
+        const same =
+          x.kind === "gift" &&
+          String(x.sender || "").toLowerCase() === String(sender).toLowerCase() &&
+          Number(x.tier || 1) === tier;
+
+        // okno 45s (aby SE stihlo poslat recipienty)
+        const inWindow = Math.abs((xTs || baseTs) - baseTs) <= 45000;
+
+        if (!same || !inWindow) break;
+        count += Number(x.count || 1);
+        j++;
+      }
+
+      const mins = SUB_MINUTES[tier] || 10;
+      const time = e.ts ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" }) : "--:--";
+      out.push({
+        time,
+        text: `🎁 ${sender} daroval ${count}× sub (T${tier}) (+${count * mins} min) 💗`,
+      });
+
+      i = j - 1;
+      continue;
+    }
+
+    // normální event
+    const time = e.ts ? new Date(e.ts).toLocaleTimeString("cs-CZ", { hour:"2-digit", minute:"2-digit" }) : "--:--";
+    out.push({ time, text: eventLine(e) });
+  }
+
+  feed.innerHTML = out.length
+    ? out.map((r) => `<div class="feedRow"><span class="feedTime">[${r.time}]</span><span class="feedText">${r.text}</span></div>`).join("")
+    : `<div class="muted">Zatím nic… 💜</div>`;
 }
 
-// ----------------------------
+// --------------------
 // Main render
-// ----------------------------
-function renderState(state) {
+// --------------------
+let lastState = null;
+
+function render(state) {
+  lastState = state;
+
   const startedAt = Number(state?.startedAt) || null;
   const endsAt = Number(state?.endsAt) || null;
+
   const paused = !!state?.paused;
   const pausedAt = state?.pausedAt ? Number(state.pausedAt) : null;
 
-  // Remaining is already pause-safe from Worker
+  // čas do konce (server už to počítá správně)
   const remaining = Number(state?.timeRemainingSec) || 0;
-  safeText("timeLeft", formatHMS(remaining));
-  safeText("endsAtText", endsAt ? `Konec: ${formatDateTime(endsAt)}` : "Konec: —");
+  setText("#timeLeft", formatHMS(remaining));
+  setText("#endsAtText", endsAt ? `Konec: ${formatDateTime(endsAt)}` : "Konec: —");
 
-  // Running time (pause-safe)
+  // jak dlouho streamuje
   if (startedAt) {
     const now = Date.now();
     const effectiveNow = paused && pausedAt ? pausedAt : now;
     const streamedSec = Math.max(0, Math.floor((effectiveNow - startedAt) / 1000));
-    safeText("timeRunning", formatHMS(streamedSec));
-    safeText("startedAtText", `Start: ${formatDateTime(startedAt)}`);
+    setText("#timeRunning", formatHMS(streamedSec));
+    setText("#startedAtText", `Start: ${formatDateTime(startedAt)}`);
   } else {
-    safeText("timeRunning", "--:--:--");
-    safeText("startedAtText", "Start: —");
+    setText("#timeRunning", "--:--:--");
+    setText("#startedAtText", "Start: —");
   }
 
-  // Time progress
+  // progress času
   if (startedAt && endsAt && endsAt > startedAt) {
     const now = Date.now();
     const effectiveNow = paused && pausedAt ? pausedAt : now;
-    const totalMs = endsAt - startedAt;
-    const elapsed = clamp01((effectiveNow - startedAt) / totalMs);
+    const total = endsAt - startedAt;
+    const elapsed = clamp01((effectiveNow - startedAt) / total);
     const pct = Math.round(elapsed * 100);
-    safeText("timePct", `${pct}%`);
-    const fill = $("#timeProgress");
-    if (fill) fill.style.width = `${pct}%`;
-  } else {
-    safeText("timePct", "0%");
-    const fill = $("#timeProgress");
-    if (fill) fill.style.width = `0%`;
+    setWidth("#timeProgress", pct);
+    setText("#timePct", `${pct}%`);
   }
 
-  // Money
+  // money
   const money = Number(state?.money) || 0;
-  safeText("money", `${formatKc(money)} Kč`);
-  safeText("moneySmall", `${formatKc(money)} / ${formatKc(GOAL_TOTAL)} Kč`);
-  const mPct = Math.round(clamp01(money / GOAL_TOTAL) * 100);
-  const mFill = $("#moneyProgress");
-  if (mFill) mFill.style.width = `${mPct}%`;
+  setText("#money", `${formatKc(money)} Kč`);
+  setText("#moneySmall", `${formatKc(money)} / ${formatKc(GOAL_TOTAL)} Kč`);
+  setWidth("#moneyProgress", Math.round(clamp01(money / GOAL_TOTAL) * 100));
 
-  // Goal header + goal bar
-  safeText("goalHeader", `${formatKc(money)} / ${formatKc(GOAL_TOTAL)} Kč`);
-  const gPct = Math.round(clamp01(money / GOAL_TOTAL) * 100);
-  const gFill = $("#goalBar");
-  if (gFill) gFill.style.width = `${gPct}%`;
-
-  // Subs
+  // subs
   const t1 = Number(state?.t1) || 0;
   const t2 = Number(state?.t2) || 0;
   const t3 = Number(state?.t3) || 0;
   const subsTotal = Number(state?.subsTotal) || (t1 + t2 + t3);
-  safeText("subsTotal", String(subsTotal));
-  safeText("subsBreak", `${t1} / ${t2} / ${t3}`);
+  setText("#subsTotal", String(subsTotal));
+  setText("#subsBreak", `${t1} / ${t2} / ${t3}`);
 
-  // Lists
   renderGoals(money);
-  renderTopDonors(state?.topDonors || []);
-  renderFeed(state?.lastEvents || []);
+  renderTop(state?.topDonors || []);
+  renderFeed(state?.lastEvents || state?.events || []);
 }
 
-// ----------------------------
+// --------------------
 // Fetch loop
-// ----------------------------
+// --------------------
 async function loadState() {
-  try {
-    const r = await fetch(API_STATE, { cache: "no-store" });
-    if (!r.ok) throw new Error(`API error ${r.status}`);
-    const data = await r.json();
-    renderState(data);
-  } catch (err) {
-    console.error("[FUFATHON] loadState error:", err);
-  }
+  const r = await fetch(API_STATE, { cache: "no-store" });
+  if (!r.ok) throw new Error(`API error ${r.status}`);
+  const data = await r.json();
+  render(data);
 }
 
 function start() {
-  initTheme();
-  loadState();
-  setInterval(loadState, 3000);
+  loadState().catch(console.error);
+  setInterval(() => loadState().catch(console.error), 3000);
 }
 
 document.addEventListener("DOMContentLoaded", start);
