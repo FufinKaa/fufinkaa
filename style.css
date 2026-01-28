@@ -417,42 +417,56 @@ h2{
   line-height:1.25;
 }
 
-/* TWITCH STREAM A CHAT */
+/* TWITCH STREAM A CHAT - OPRAVENÉ */
 #liveStreamSection .live-container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 18px;
-  margin-top: 8px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    margin-top: 8px;
 }
 
 #liveStreamSection .twitch-stream,
 #liveStreamSection .twitch-chat {
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  height: 480px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    height: 500px; /* Zvýšená výška */
+    position: relative;
 }
 
 #liveStreamSection .twitch-stream iframe,
 #liveStreamSection .twitch-chat iframe {
-  width: 100%;
-  height: 100%;
-  display: block;
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: none; /* DŮLEŽITÉ: odstraní výchozí okraj */
+}
+
+/* Loading state - když je offline */
+#liveStreamSection .twitch-stream::before {
+    content: "🔴 Stream se načítá...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--muted);
+    font-weight: bold;
+    z-index: 1;
 }
 
 /* Responsive */
 @media (max-width: 1100px){
-  .grid{ grid-template-columns: 1fr; }
-  .heroGrid{ grid-template-columns: 1fr; }
+    .grid{ grid-template-columns: 1fr; }
+    .heroGrid{ grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px){
-  #liveStreamSection .live-container {
-    grid-template-columns: 1fr;
-  }
-  #liveStreamSection .twitch-stream,
-  #liveStreamSection .twitch-chat {
-    height: 300px;
-  }
+    #liveStreamSection .live-container {
+        grid-template-columns: 1fr;
+    }
+    #liveStreamSection .twitch-stream,
+    #liveStreamSection .twitch-chat {
+        height: 350px;
+    }
 }
