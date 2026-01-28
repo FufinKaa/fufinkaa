@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FUFATHON Dashboard</title>
   <link rel="stylesheet" href="./style.css" />
+  <!-- Knihovna pro StreamElements Socket -->
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 </head>
 
 <body>
@@ -129,10 +131,32 @@
         <a class="social tw" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">🟣 Twitch</a>
         <a class="social yt" href="https://youtube.com/FufinKa" target="_blank" rel="noreferrer">▶️ YouTube</a>
       </div>
+    </section>
 
-
-
-
+    <!-- TWITCH STREAM A CHAT -->
+    <section class="card wide" id="liveStreamSection">
+      <div class="cardHead">
+        <h2>🔴 Živě na Twitchi</h2>
+        <div class="muted">Sleduj a přidej se do chatu! 🎮</div>
+      </div>
+      <div class="live-container">
+        <div class="twitch-stream">
+          <iframe
+            src="https://player.twitch.tv/?channel=fufinkaa&parent=fufinkaa.github.io&autoplay=true"
+            frameborder="0"
+            allowfullscreen="true"
+            scrolling="no"
+            title="Živý stream Fufinka">
+          </iframe>
+        </div>
+        <div class="twitch-chat">
+          <iframe
+            src="https://www.twitch.tv/embed/fufinkaa/chat?parent=fufinkaa.github.io&darkpopout"
+            frameborder="0"
+            scrolling="yes"
+            title="Chat Fufinka">
+          </iframe>
+        </div>
       </div>
     </section>
 
