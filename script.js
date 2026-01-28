@@ -471,3 +471,38 @@ function start() {
 }
 
 document.addEventListener("DOMContentLoaded", start);
+
+// --------------------
+// Twitch Embed pomocné funkce
+// --------------------
+function checkTwitchStatus() {
+    const streamIframe = document.querySelector('.twitch-stream iframe');
+    const chatIframe = document.querySelector('.twitch-chat iframe');
+    const streamContainer = document.querySelector('.twitch-stream');
+    
+    if (!streamIframe || !chatIframe) return;
+    
+    // Pravidelně kontrolujeme, zda iframy fungují
+    const streamSrc = streamIframe.src;
+    const chatSrc = chatIframe.src;
+    
+    // Pokud se iframy nenačetly správně, zkusíme je znovu načíst
+    setTimeout(() => {
+        try {
+            const streamDoc = streamIframe.contentDocument || streamIframe.contentWindow.document;
+            if (streamDoc && streamDoc.body && streamDoc.body.innerHTML.includes('offline')) {
+                streamContainer.classList.add('offline');
+            } else {
+                streamContainer.classList.remove('offline');
+            }
+        } catch (e) {
+            // Cross-origin error - ignorujeme
+        }
+    }, 3000);
+}
+
+// Přidáme kontrolu po načtení stránky
+window.addEventListener('load', () => {
+    setTimeout(checkTwitchStatus, 2000);
+    setInterval(checkTwitchStatus, 15000);
+});
