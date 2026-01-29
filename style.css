@@ -116,10 +116,23 @@ body {
 
 /* TIMER */
 .timer-card {
-  text-align: center;
-  padding: 30px 24px;
+  padding: 30px;
   background: linear-gradient(145deg, rgba(255, 90, 200, 0.05), rgba(158, 123, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.timer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.timer-box {
+  text-align: center;
+  padding: 25px 20px;
+  background: var(--bg-card-light);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .timer-label {
@@ -128,16 +141,20 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .timer-display {
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 900;
   line-height: 1;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
   color: var(--text);
+}
+
+.timer-display.violet {
+  color: var(--accent-violet);
 }
 
 .timer-info {
@@ -298,6 +315,7 @@ body {
 }
 
 @media (max-width: 768px) {
+  .timer-grid,
   .content-grid,
   .stats-grid,
   .progress-grid {
@@ -456,7 +474,7 @@ body {
   }
   
   .timer-display {
-    font-size: 3rem;
+    font-size: 2.8rem;
   }
   
   .stat-value {
@@ -483,7 +501,7 @@ body {
   }
   
   .timer-display {
-    font-size: 2.5rem;
+    font-size: 2.3rem;
   }
   
   .progress-grid {
