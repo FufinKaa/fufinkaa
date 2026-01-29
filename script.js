@@ -528,11 +528,6 @@ function handleTipEvent(data) {
   updateTopDonors(username, amountCzk);
   updateTotalMoney();
 }
-  
-  socket.on('error', (err) => {
-    console.error('❌ StreamElements error:', err);
-  });
-}
 
 // ===== MAIN RENDER =====
 function renderDashboard(data) {
@@ -654,18 +649,21 @@ function updateActivityFeed(events) {
       case 'donation':
         icon = "💰";
         text = `Donate ${formatKc(event.amount)} Kč od ${event.username}`;
+        if (event.message) text += `: "${event.message.substring(0, 30)}${event.message.length > 30 ? '...' : ''}"`;
         break;
       case 'sub':
         icon = "⭐";
         text = `${event.username} si pořídil sub (T${event.tier})`;
+        if (event.message) text += `: "${event.message.substring(0, 30)}${event.message.length > 30 ? '...' : ''}"`;
         break;
       case 'resub':
         icon = "🔁";
         text = `${event.username} resub (${event.months} měs.)`;
+        if (event.message) text += `: "${event.message.substring(0, 30)}${event.message.length > 30 ? '...' : ''}"`;
         break;
       case 'gift':
         icon = "🎁";
-        text = `${event.gifter} daroval ${event.count}× sub`;
+        text = `${event.gifter} daroval ${event.count}× sub${event.recipient ? ` pro ${event.recipient}` : ''}`;
         break;
     }
     
@@ -721,7 +719,7 @@ function updateSubsDisplay(subs) {
 function updateTotalMoney() {
   try {
     const donors = JSON.parse(localStorage.getItem('fufathon_donors') || '[]');
-    const totalMoney = donors.reduce((sum, donor) => sum + donor.total, 0);
+    const totalMoney = donors.reduce((sum, donor) => sum + (donor.total || 0), 0);
     
     // Aktualizuj na stránce
     $("#money").textContent = `${formatKc(totalMoney)} Kč`;
