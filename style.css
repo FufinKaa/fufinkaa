@@ -250,7 +250,7 @@ body {
   font-weight: 500;
 }
 
-/* PROGRESS */
+/* PROGRESS - JEN BARY */
 .progress-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -263,37 +263,24 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
-}
-
-.progress-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 15px;
-}
-
-.progress-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.progress-percent {
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--accent-violet);
+  justify-content: center;
+  gap: 15px;
 }
 
 .progress-bar {
-  height: 10px;
+  height: 12px;
+  width: 100%;
   background: var(--bg-card-light);
-  border-radius: 5px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 5px;
+  border-radius: 6px;
   background: linear-gradient(90deg, var(--accent-pink), var(--accent-violet));
   transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -304,6 +291,18 @@ body {
 
 .progress-fill.cyan {
   background: linear-gradient(90deg, var(--accent-cyan), #5ad4ff);
+}
+
+.progress-percent {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--accent-violet);
+  text-align: center;
+}
+
+/* Odstranit progress-header */
+.progress-header {
+  display: none;
 }
 
 /* GOALS TABLE - NOVÉ! */
