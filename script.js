@@ -1,5 +1,5 @@
 // ============================
-// FUFATHON Dashboard - Nový design
+// FUFATHON Dashboard - Čistý design
 // ============================
 
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
@@ -9,28 +9,24 @@ const SE_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsI
 
 const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
 
-// DONATEGOAL (podle screenshotu)
+// DONATEGOAL (jen z obrázku)
 const GOALS = [
-  { amount: 120000, icon: "🎧", title: "ASMR stream" },
-  { amount: 125000, icon: "⚡", title: "Bolt Tower" },
-  { amount: 130000, icon: "🥶", title: "Otužování" },
-  { amount: 140000, icon: "⛳", title: "MiniGolf" },
-  { amount: 150000, icon: "🫧", title: "Vířivka" },
-  { amount: 160000, icon: "🎨", title: "Zážitkové ART studio" },
-  { amount: 170000, icon: "🐎", title: "Jízda na koni" },
-  { amount: 180000, icon: "🏔️", title: "Výšlap na Lysou horu" },
-  { amount: 190000, icon: "🖊️", title: "Tetování" },
-  { amount: 200000, icon: "🏙️", title: "Víkend v Praze" },
+  { amount: 120000, title: "ASMR stream" },
+  { amount: 125000, title: "Bolt Tower" },
+  { amount: 130000, title: "Otužování" },
+  { amount: 140000, title: "MiniGolf" },
+  { amount: 150000, title: "Vířivka" },
+  { amount: 160000, title: "Zážitkové ART studio" }
 ];
 
-// SUBGOAL (podle screenshotu)
+// SUBGOAL (přesně z obrázku)
 const SUB_GOALS = [
-  { amount: 100, icon: "🍳", title: "Snídaně podle chatu" },
-  { amount: 200, icon: "💄", title: "Make-up challenge" },
-  { amount: 300, icon: "👗", title: "Outfit vybíráte vy" },
-  { amount: 400, icon: "⚖️", title: "Kontrola váhy od teď" },
-  { amount: 500, icon: "⚔️", title: "1v1 s chatem" },
-  { amount: 1000, icon: "🏎️", title: "Subgoal hlavní" },
+  { amount: 100, title: "Snídaně podle chatu" },
+  { amount: 200, title: "Make-up challenge" },
+  { amount: 300, title: "Outfit vybíráte vy" },
+  { amount: 400, title: "Kontrola váhy od teď" },
+  { amount: 500, title: "1v1 s chatem" },
+  { amount: 1000, title: "Subgoal hlavní" }
 ];
 
 // ===== UTILITIES =====
@@ -95,14 +91,9 @@ function renderGoals(money) {
   if (!list) return;
   
   const goalsHTML = GOALS.map(g => {
-    const done = m >= g.amount;
-    
     return `
-      <div class="goal-item ${done ? 'done' : ''}">
-        <div class="goal-content">
-          <span class="goal-icon">${g.icon}</span>
-          <span class="goal-text">${g.title}</span>
-        </div>
+      <div class="goal-item">
+        <div class="goal-name">${g.title}</div>
         <div class="goal-amount">${formatKc(g.amount)} Kč</div>
       </div>
     `;
@@ -123,14 +114,9 @@ function renderSubGoals(subsTotal) {
   if (!list) return;
   
   const subGoalsHTML = SUB_GOALS.map(g => {
-    const done = subs >= g.amount;
-    
     return `
-      <div class="goal-item ${done ? 'done' : ''}">
-        <div class="goal-content">
-          <span class="goal-icon">${g.icon}</span>
-          <span class="goal-text">${g.title}</span>
-        </div>
+      <div class="goal-item">
+        <div class="goal-name">${g.title}</div>
         <div class="goal-amount">${g.amount} subs</div>
       </div>
     `;
@@ -142,29 +128,6 @@ function renderSubGoals(subsTotal) {
   const subGoalPercent = Math.min(100, (subs / SUB_GOAL_TOTAL) * 100);
   $("#subGoalBar").style.width = `${subGoalPercent}%`;
   $("#subPct").textContent = `${subGoalPercent.toFixed(1)}%`;
-}
-
-// ===== TOP DONORS =====
-function renderTopDonors(donors) {
-  const tbody = $("#topTableBody");
-  if (!tbody) return;
-  
-  const donorsArray = donors || [];
-  const rows = donorsArray.slice(0, 5).map((donor, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td><strong>${donor.user || "Anonym"}</strong></td>
-      <td>${formatKc(donor.totalKc || 0)} Kč</td>
-    </tr>
-  `).join('');
-  
-  tbody.innerHTML = rows || `
-    <tr>
-      <td colspan="3" class="mutedCell">
-        Zatím žádní dárci...
-      </td>
-    </tr>
-  `;
 }
 
 // ===== ACTIVITY FEED =====
@@ -203,7 +166,7 @@ function renderActivityFeed(events) {
     return `
       <div class="activity-item">
         <span class="activity-time">[${time}]</span>
-        <span class="activity-content">${icon} ${text}</span>
+        <span class="activity-text">${icon} ${text}</span>
         <span class="activity-amount">${amount}</span>
       </div>
     `;
@@ -211,7 +174,7 @@ function renderActivityFeed(events) {
   
   feed.innerHTML = feedHTML || `
     <div class="activity-item">
-      <span class="activity-content">Zatím žádné akce...</span>
+      <span class="activity-text">Zatím žádné akce...</span>
     </div>
   `;
 }
@@ -259,7 +222,14 @@ function renderDashboard(data) {
   $("#timeLeft").textContent = formatHMS(remaining);
   
   if (data.endsAt) {
-    $("#endsAtText").textContent = `Konec: ${formatDateTime(data.endsAt)}`;
+    const date = new Date(data.endsAt);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    $("#endsAtText").textContent = `Konec: ${day}. ${month}. ${year} ${hours}:${minutes}`;
   }
   
   // Progress času
@@ -288,7 +258,6 @@ function renderDashboard(data) {
   // Zbytek
   renderGoals(money);
   renderSubGoals(subsTotal);
-  renderTopDonors(data.topDonors);
   renderActivityFeed(data.lastEvents || data.events || []);
 }
 
