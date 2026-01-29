@@ -152,4 +152,196 @@ function renderSubGoals(subsTotal) {
     
     return `
       <div class="subGoalRow ${done ? 'done' : ''}">
-        <span class="goalTitle">${g.title}</
+        <span class="goalTitle">${g.title}</span>
+        <span class="subGoalAmount">${g.amount} subs</span>
+      </div>
+    `;
+  }).join('');
+  
+  list.innerHTML = subGoalsHTML;
+  $("#subGoalHeader").textContent = `${subs} / ${SUB_GOAL_TOTAL} subs`;
+  
+  const subGoalPercent = Math.min(100, (subs / SUB_GOAL_TOTAL) * 100);
+  $("#subGoalBar").style.width = `${subGoalPercent}%`;
+}
+
+// ===== TOP DONORS =====
+function renderTopDonors(donors) {
+  const tbody = $("#topTableBody");
+  if (!tbody) return;
+  
+  const donorsArray = donors || [];
+  const rows = donorsArray.slice(0, 5).map((donor, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${donor.user || "Anonym"}</strong></td>
+      <td>${formatKc(donor.totalKc || 0)} Kč</td>
+      <td>+${Math.round((donor.addedSec || 0) / 60)} min</td>
+    </tr>
+  `).join('');
+  
+  tbody.innerHTML = rows || `
+    <tr>
+      <td colspan="4" class="mutedCell">
+        Zatím žádní dárci... buď první! 💜
+      </td>
+    </tr>
+  `;
+}
+
+// ===== ACTIVITY FEED =====
+function renderActivityFeed(events) {
+  const feed = $("#feed");
+  if (!feed) return;
+  
+  const eventsArray = events || [];
+  const feedHTML = eventsArray.slice(0, 10).map(event => {
+    const time = event.ts ? 
+      new Date(event.ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" }) : 
+      "--:--";
+    
+    let icon = "⚡";
+    let text = event.text || "";
+    let amount = "";
+    
+    if (event.kind === "donation") {
+      icon = "💰";
+      text = `Donate ${formatKc(event.amountKc)} Kč od ${event.sender || 'Anonym'}`;
+      amount = `+${Math.round((event.amountKc / 100) * 15)} min`;
+    } else if (event.kind === "sub") {
+      icon = "⭐";
+      text = `${event.sender || 'Anonym'} si pořídil sub (T${event.tier})`;
+      amount = `+${SUB_MINUTES[event.tier] || 10} min`;
+    } else if (event.kind === "resub") {
+      icon = "🔁";
+      text = `${event.sender || 'Anonym'} resub (${event.months} měs.)`;
+      amount = `+${SUB_MINUTES[event.tier] || 10} min`;
+    } else if (event.kind === "gift") {
+      icon = "🎁";
+      text = `${event.sender || 'Anonym'} daroval ${event.count}× sub`;
+      amount = `+${(SUB_MINUTES[event.tier] || 10) * event.count} min`;
+    }
+    
+    return `
+      <div class="feedRow">
+        <span class="feedTime">[${time}]</span>
+        <span class="feedText">${icon} ${text}</span>
+        <span class="feedAmount">${amount}</span>
+      </div>
+    `;
+  }).join('');
+  
+  feed.innerHTML = feedHTML || `
+    <div class="mutedCell">
+      Zatím žádné akce... čekáme na první sub nebo donate! 🎮
+    </div>
+  `;
+}
+
+// ===== STREAMELEMENTS SOCKET =====
+function connectStreamElements() {
+  if (!SE_JWT_TOKEN) {
+    console.log('⚠️ StreamElements: JWT token není nastaven');
+    return;
+  }
+  
+  if (!window.io) {
+    console.error('❌ Socket.io není načteno');
+    return;
+  }
+  
+  const socket = io('https://realtime.streamelements.com', {
+    transports: ['websocket']
+  });
+  
+  socket.on('connect', () => {
+    console.log('✅ StreamElements: Připojeno');
+    socket.emit('authenticate', {
+      method: 'jwt',
+      token: SE_JWT_TOKEN
+    });
+  });
+  
+  socket.on('event', (data) => {
+    console.log('🎬 StreamElements event:', data.listener);
+    // Okamžitá aktualizace feedu při nové události
+    fetchDashboardData();
+  });
+  
+  socket.on('error', (err) => {
+    console.error('❌ StreamElements error:', err);
+  });
+}
+
+// ===== MAIN RENDER =====
+function renderDashboard(data) {
+  if (!data) return;
+  
+  // Čas
+  const remaining = Number(data.timeRemainingSec) || 0;
+  $("#timeLeft").textContent = formatHMS(remaining);
+  
+  if (data.endsAt) {
+    $("#endsAtText").textContent = `Konec: ${formatDateTime(data.endsAt)}`;
+  }
+  
+  if (data.startedAt) {
+    const streamedSec = Math.floor((Date.now() - data.startedAt) / 1000);
+    $("#timeRunning").textContent = formatHMS(streamedSec);
+    $("#startedAtText").textContent = `Start: ${formatDateTime(data.startedAt)}`;
+    
+    if (data.endsAt && data.endsAt > data.startedAt) {
+      const percent = Math.min(100, ((Date.now() - data.startedAt) / (data.endsAt - data.startedAt)) * 100);
+      $("#timeProgress").style.width = `${percent}%`;
+      $("#timePct").textContent = `${Math.round(percent)}%`;
+    }
+  }
+  
+  // Peníze
+  const money = Number(data.money) || 0;
+  $("#money").textContent = `${formatKc(money)} Kč`;
+  $("#moneySmall").textContent = `${formatKc(money)} / ${formatKc(GOAL_TOTAL)} Kč`;
+  
+  const moneyPercent = Math.min(100, (money / GOAL_TOTAL) * 100);
+  $("#moneyProgress").style.width = `${moneyPercent}%`;
+  
+  // Suby
+  const t1 = Number(data.t1) || 0;
+  const t2 = Number(data.t2) || 0;
+  const t3 = Number(data.t3) || 0;
+  const subsTotal = Number(data.subsTotal) || (t1 + t2 + t3);
+  
+  $("#subsTotal").textContent = subsTotal;
+  $("#subsBreak").textContent = `${t1} / ${t2} / ${t3}`;
+  
+  // Zbytek
+  renderGoals(money);
+  renderSubGoals(subsTotal);
+  renderTopDonors(data.topDonors);
+  renderActivityFeed(data.lastEvents || data.events || []);
+}
+
+// ===== API FETCH =====
+async function fetchDashboardData() {
+  try {
+    const response = await fetch(API_STATE, { cache: "no-store" });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    renderDashboard(data);
+  } catch (error) {
+    console.error('Chyba při načítání dat:', error);
+  }
+}
+
+// ===== INITIALIZATION =====
+function initDashboard() {
+  initTheme();
+  fetchDashboardData();
+  connectStreamElements();
+  
+  // Auto-refresh každé 3 sekundy
+  setInterval(fetchDashboardData, 3000);
+}
+
+// ===== START =====
+document.addEventListener("DOMContentLoaded", initDashboard);
