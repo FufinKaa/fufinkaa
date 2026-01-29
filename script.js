@@ -4,10 +4,12 @@
 
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
 const GOAL_TOTAL = 200000;
-const SE_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsIiwiZXhwIjoxNzg1MTg5ODgyLCJqdGkiOiI2MzMzNDRlMS03ODkxLTQ4NjAtOTIzNC0zNmY3Y2I0YWRhMTciLCJjaGFubmVsIjoiNWJhN2M4NTY2NzE2NmQ5MTUwYjQwNmZlIiwicm9sZSI6Im93bmVyIiwiYXV0aFRva2VuIjoiYU9PQ0E1UmR3V2M2OTZ0WVJzUU1pQjRjNzZ2ZUdBUFdxN0hsYXJLczhxSHZIb2xJIiwidXNlciI6IjViYTdjODU2NjcxNjZkM2U5OGI0MDZmZCIsInVzZXJfaWQiOiIyOGE3MTNkZS00ZDAzLTQxYzQtOTliMi1hMWQ0NDY0NmY0NDkiLCJ1c2VyX3JvbGUiOiJjcmVhdG9yIiwicHJvdmlkZXIiOiJ0d2l0Y2giLCJwcm92aWRlcl9pZCI6IjI1MzExNjI5MSIsImNoYW5uZWxfaWQiOiI1NGQwNzRjYi1hODQ0LTRmMDctOWZhNC02NWVlNDRmNjJiZGUiLCJjcmVhdG9yX2lkIjoiZDU5MGJmYzMtNDgwYS00MTc0LWEyOWUtZWRlOTI1MjI3N2YyIn0.fXn27iJsOAB7u02mFzBLEEvAY1bYBM47LhMWbhJv_yg'; // ← ZDE VLOŽ TOKEN!
+const SUB_GOAL_TOTAL = 1000;
+const SE_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsIiwiZXhwIjoxNzg1MTg5ODgyLCJqdGkiOiI2MzMzNDRlMS03ODkxLTQ4NjAtOTIzNC0zNmY3Y2I0YWRhMTciLCJjaGFubmVsIjoiNWJhN2M4NTY2NzE2NmQ5MTUwYjQwNmZlIiwicm9sZSI6Im93bmVyIiwiYXV0aFRva2VuIjoiYU9PQ0E1UmR3V2M2OTZ0WVJzUU1pQjRjNzZ2ZUdBUFdxN0hsYXJLczhxSHZIb2xJIiwidXNlciI6IjViYTdjODU2NjcxNjZkM2U5OGI0MDZmZCIsInVzZXJfaWQiOiIyOGE3MTNkZS00ZDAzLTQxYzQtOTliMi1hMWQ0NDY0NmY0NDkiLCJ1c2VyX3JvbGUiOiJjcmVhdG9yIiwicHJvdmlkZXIiOiJ0d2l0Y2giLCJwcm92aWRlcl9pZCI6IjI1MzExNjI5MSIsImNoYW5uZWxfaWQiOiI1NGQwNzRjYi1hODQ0LTRmMDctOWZhNC02NWVlNDRmNjJiZGUiLCJjcmVhdG9yX2lkIjoiZDU5MGJmYzMtNDgwYS00MTc0LWEyOWUtZWRlOTI1MjI3N2YyIn0.fXn27iJsOAB7u02mFzBLEEvAY1bYBM47LhMWbhJv_yg';
 
 const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
 
+// DONATEGOAL (původní)
 const GOALS = [
   { amount: 5000, icon: "🎬", title: "Movie night" },
   { amount: 10000, icon: "😏", title: "Q&A bez cenzury" },
@@ -40,6 +42,20 @@ const GOALS = [
   { amount: 180000, icon: "🏔️", title: "Výšlap na Lysou horu" },
   { amount: 190000, icon: "🖊️", title: "Tetování" },
   { amount: 200000, icon: "🏙️", title: "Víkend v Praze" },
+];
+
+// SUBGOAL (nový)
+const SUB_GOALS = [
+  { amount: 100, title: "Snídaně podle chatu" },
+  { amount: 200, title: "Make-up challenge" },
+  { amount: 300, title: "Outfit vybíráte vy" },
+  { amount: 400, title: "Kontrola váhy od teď" },
+  { amount: 500, title: "1v1 s chatem" },
+  { amount: 600, title: "Vybíráte hru na hlavní blok dne" },
+  { amount: 700, title: "Rozhoduje o dni" },
+  { amount: 800, title: "Luxusní restaurace v Ostravě" },
+  { amount: 900, title: "Turnaj ve Fortnite" },
+  { amount: 1000, title: "Jízda ve sporťáku" }
 ];
 
 // ===== UTILITIES =====
@@ -97,7 +113,7 @@ function initTheme() {
   });
 }
 
-// ===== GOALS RENDER =====
+// ===== DONATEGOAL RENDER =====
 function renderGoals(money) {
   const m = Number(money) || 0;
   const list = $("#goalList");
@@ -105,21 +121,15 @@ function renderGoals(money) {
   
   const goalsHTML = GOALS.map(g => {
     const done = m >= g.amount;
-    const percent = Math.min(100, (m / g.amount) * 100);
     
     return `
-      <div class="goalItem ${done ? 'done' : ''}">
-        <div class="goalHeader">
+      <div class="goalRow ${done ? 'done' : ''}">
+        <div class="goalLeft">
+          <span class="goalCheck">${done ? '✅' : '⬜'}</span>
           <span class="goalIcon">${g.icon}</span>
           <span class="goalTitle">${g.title}</span>
-          <span class="goalAmount">${formatKc(g.amount)} Kč</span>
         </div>
-        <div class="goalProgress">
-          <div class="goalProgressBar" style="width: ${percent}%"></div>
-        </div>
-        <div class="goalStatus">
-          ${done ? '✅ Dokončeno' : `${formatKc(m)} / ${formatKc(g.amount)} Kč`}
-        </div>
+        <div class="goalAmt">${formatKc(g.amount)} Kč</div>
       </div>
     `;
   }).join('');
@@ -131,307 +141,15 @@ function renderGoals(money) {
   $("#goalBar").style.width = `${goalPercent}%`;
 }
 
-// ===== TOP DONORS =====
-function renderTopDonors(donors) {
-  const tbody = $("#topTableBody");
-  if (!tbody) return;
+// ===== SUBGOAL RENDER =====
+function renderSubGoals(subsTotal) {
+  const subs = Number(subsTotal) || 0;
+  const list = $("#subGoalList");
+  if (!list) return;
   
-  const donorsArray = donors || [];
-  const rows = donorsArray.slice(0, 5).map((donor, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td><strong>${donor.user || "Anonym"}</strong></td>
-      <td>${formatKc(donor.totalKc || 0)} Kč</td>
-      <td>+${Math.round((donor.addedSec || 0) / 60)} min</td>
-    </tr>
-  `).join('');
-  
-  tbody.innerHTML = rows || `
-    <tr>
-      <td colspan="4" class="noData">
-        Zatím žádní dárci... buď první! 💜
-      </td>
-    </tr>
-  `;
-}
-
-// ===== ACTIVITY FEED =====
-function renderActivityFeed(events) {
-  const feed = $("#feed");
-  if (!feed) return;
-  
-  const eventsArray = events || [];
-  const feedHTML = eventsArray.slice(0, 10).map(event => {
-    const time = event.ts ? 
-      new Date(event.ts).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" }) : 
-      "--:--";
-    
-    let icon = "⚡";
-    let text = event.text || "";
-    
-    if (event.kind === "donation") {
-      icon = "💰";
-      text = `Donate ${formatKc(event.amountKc)} Kč od ${event.sender}`;
-    } else if (event.kind === "sub") {
-      icon = "⭐";
-      text = `${event.sender} si pořídil sub (T${event.tier})`;
-    } else if (event.kind === "resub") {
-      icon = "🔁";
-      text = `${event.sender} resub (${event.months} měs.)`;
-    } else if (event.kind === "gift") {
-      icon = "🎁";
-      text = `${event.sender} daroval ${event.count}× sub`;
-    }
+  const subGoalsHTML = SUB_GOALS.map(g => {
+    const done = subs >= g.amount;
     
     return `
-      <div class="activityItem">
-        <span class="activityTime">[${time}]</span>
-        <span class="activityIcon">${icon}</span>
-        <span class="activityText">${text}</span>
-        ${event.amountKc ? `<span class="activityAmount">+${Math.round((SUB_MINUTES[event.tier] || 10) * (event.count || 1))} min</span>` : ''}
-      </div>
-    `;
-  }).join('');
-  
-  feed.innerHTML = feedHTML || `
-    <div class="noData">
-      Zatím žádné akce... čekáme na první sub nebo donate! 🎮
-    </div>
-  `;
-}
-
-// ===== STREAMELEMENTS SOCKET =====
-function connectStreamElements() {
-  if (!SE_JWT_TOKEN || SE_JWT_TOKEN === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsIiwiZXhwIjoxNzg1MTg5ODgyLCJqdGkiOiI2MzMzNDRlMS03ODkxLTQ4NjAtOTIzNC0zNmY3Y2I0YWRhMTciLCJjaGFubmVsIjoiNWJhN2M4NTY2NzE2NmQ5MTUwYjQwNmZlIiwicm9sZSI6Im93bmVyIiwiYXV0aFRva2VuIjoiYU9PQ0E1UmR3V2M2OTZ0WVJzUU1pQjRjNzZ2ZUdBUFdxN0hsYXJLczhxSHZIb2xJIiwidXNlciI6IjViYTdjODU2NjcxNjZkM2U5OGI0MDZmZCIsInVzZXJfaWQiOiIyOGE3MTNkZS00ZDAzLTQxYzQtOTliMi1hMWQ0NDY0NmY0NDkiLCJ1c2VyX3JvbGUiOiJjcmVhdG9yIiwicHJvdmlkZXIiOiJ0d2l0Y2giLCJwcm92aWRlcl9pZCI6IjI1MzExNjI5MSIsImNoYW5uZWxfaWQiOiI1NGQwNzRjYi1hODQ0LTRmMDctOWZhNC02NWVlNDRmNjJiZGUiLCJjcmVhdG9yX2lkIjoiZDU5MGJmYzMtNDgwYS00MTc0LWEyOWUtZWRlOTI1MjI3N2YyIn0.fXn27iJsOAB7u02mFzBLEEvAY1bYBM47LhMWbhJv_yg') {
-    console.log('⚠️ StreamElements: JWT token není nastaven');
-    return;
-  }
-  
-  if (!window.io) {
-    console.error('❌ Socket.io není načteno');
-    return;
-  }
-  
-  const socket = io('https://realtime.streamelements.com', {
-    transports: ['websocket']
-  });
-  
-  socket.on('connect', () => {
-    console.log('✅ StreamElements: Připojeno');
-    socket.emit('authenticate', {
-      method: 'jwt',
-      token: SE_JWT_TOKEN
-    });
-  });
-  
-  socket.on('event', (data) => {
-    console.log('🎬 StreamElements event:', data.listener);
-    // Zde můžeš přidat okamžitou aktualizaci feedu
-  });
-  
-  socket.on('error', (err) => {
-    console.error('❌ StreamElements error:', err);
-  });
-}
-
-// ===== MAIN RENDER =====
-function renderDashboard(data) {
-  if (!data) return;
-  
-  // Čas
-  const remaining = Number(data.timeRemainingSec) || 0;
-  $("#timeLeft").textContent = formatHMS(remaining);
-  
-  if (data.endsAt) {
-    $("#endsAtText").textContent = `Konec: ${formatDateTime(data.endsAt)}`;
-  }
-  
-  if (data.startedAt) {
-    const streamedSec = Math.floor((Date.now() - data.startedAt) / 1000);
-    $("#timeRunning").textContent = formatHMS(streamedSec);
-    $("#startedAtText").textContent = `Start: ${formatDateTime(data.startedAt)}`;
-    
-    if (data.endsAt && data.endsAt > data.startedAt) {
-      const percent = Math.min(100, ((Date.now() - data.startedAt) / (data.endsAt - data.startedAt)) * 100);
-      $("#timeProgress").style.width = `${percent}%`;
-      $("#timePct").textContent = `${Math.round(percent)}%`;
-    }
-  }
-  
-  // Peníze
-  const money = Number(data.money) || 0;
-  $("#money").textContent = `${formatKc(money)} Kč`;
-  $("#moneySmall").textContent = `${formatKc(money)} / ${formatKc(GOAL_TOTAL)} Kč`;
-  
-  const moneyPercent = Math.min(100, (money / GOAL_TOTAL) * 100);
-  $("#moneyProgress").style.width = `${moneyPercent}%`;
-  
-  // Suby
-  const t1 = Number(data.t1) || 0;
-  const t2 = Number(data.t2) || 0;
-  const t3 = Number(data.t3) || 0;
-  const subsTotal = Number(data.subsTotal) || (t1 + t2 + t3);
-  
-  $("#subsTotal").textContent = subsTotal;
-  $("#subsBreak").textContent = `${t1} / ${t2} / ${t3}`;
-  
-  // Zbytek
-  renderGoals(money);
-  renderTopDonors(data.topDonors);
-  renderActivityFeed(data.lastEvents || data.events);
-}
-
-// ===== API FETCH =====
-async function fetchDashboardData() {
-  try {
-    const response = await fetch(API_STATE, { cache: "no-store" });
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
-    const data = await response.json();
-    renderDashboard(data);
-  } catch (error) {
-    console.error('Chyba při načítání dat:', error);
-  }
-}
-
-// ===== INITIALIZATION =====
-function initDashboard() {
-  initTheme();
-  fetchDashboardData();
-  connectStreamElements();
-  
-  // Auto-refresh každé 3 sekundy
-  setInterval(fetchDashboardData, 3000);
-  
-  // Přidání CSS pro goal items a activity items
-  const style = document.createElement('style');
-  style.textContent = `
-    .goalItem {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
-      margin-bottom: 12px;
-      transition: var(--transition);
-    }
-    
-    .goalItem:hover {
-      transform: translateX(4px);
-      border-color: var(--violet);
-    }
-    
-    .goalItem.done {
-      background: rgba(110, 231, 255, 0.1);
-      border-color: rgba(110, 231, 255, 0.3);
-    }
-    
-    .goalHeader {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    
-    .goalIcon {
-      font-size: 20px;
-    }
-    
-    .goalTitle {
-      flex: 1;
-      margin: 0 12px;
-      font-weight: 700;
-      font-size: 15px;
-    }
-    
-    .goalAmount {
-      font-weight: 800;
-      color: var(--violet);
-    }
-    
-    .goalProgress {
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    
-    .goalProgressBar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--pink), var(--violet));
-      border-radius: 3px;
-      transition: width 0.8s ease;
-    }
-    
-    .goalStatus {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    
-    .activityItem {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-    
-    .activityItem:hover {
-      transform: translateX(4px);
-      background: rgba(255, 255, 255, 0.08);
-    }
-    
-    .activityTime {
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 13px;
-      min-width: 60px;
-    }
-    
-    .activityIcon {
-      font-size: 18px;
-    }
-    
-    .activityText {
-      flex: 1;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    
-    .activityAmount {
-      font-weight: 800;
-      color: var(--violet);
-      font-size: 13px;
-    }
-    
-    .noData {
-      text-align: center;
-      padding: 40px;
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: 600;
-    }
-    
-    .donorsTable td:first-child {
-      font-weight: 900;
-      color: var(--violet);
-    }
-    
-    .donorsTable td:nth-child(3) {
-      font-weight: 800;
-      color: var(--violet);
-    }
-    
-    .donorsTable td:last-child {
-      color: var(--cyan);
-      font-weight: 700;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-// ===== START =====
-document.addEventListener("DOMContentLoaded", initDashboard);
+      <div class="subGoalRow ${done ? 'done' : ''}">
+        <span class="goalTitle">${g.title}</
