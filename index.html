@@ -16,7 +16,7 @@
     <!-- HLAVNÍ HEADER -->
     <header class="header">
       <h1>FUFATHON Dashboard</h1>
-      <div class="subtitle">přehled o všem 🏅</div>
+      <div class="subtitle">přehled o všem ✨</div>
       
       <div class="header-controls">
         <div class="status-pill">
@@ -44,7 +44,7 @@
         <div class="timer-box">
           <div class="timer-label">JAK DLOUHO UŽ STREAMUJI</div>
           <div class="timer-display violet" id="timeRunning">00:00:00</div>
-          <div class="timer-info" id="startedAtText">Start: 27. 01. 2026 13:58</div>
+          <div class="timer-info" id="startedAtText">Start: 27. 01. 2026 12:58</div>
         </div>
       </div>
     </section>
@@ -52,7 +52,7 @@
     <!-- STATISTIKY VEDLE SEBE -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Vybráno</div>
+        <div class="stat-label">VYBRÁNO</div>
         <div class="stat-value" id="money">600 Kč</div>
         <div class="stat-sub" id="moneySmall">600 / 200 000 Kč</div>
       </div>
@@ -97,55 +97,61 @@
       </div>
     </div>
 
-    <!-- HLAVNÍ OBSAH -->
-    <div class="content-grid">
-      <!-- SUBGOAL -->
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">Subgoal</h2>
-          <div class="card-subtitle" id="subGoalHeader">11 / 1000 subs</div>
+    <!-- GOALS SECTION - DVOJICE JAKO TABULKA -->
+    <section class="card goals-card">
+      <div class="goals-header">
+        <div class="goals-title">
+          <h2>🎯 Subgoals</h2>
+          <div class="goals-subtitle" id="subGoalHeader">11 / 1000 subs</div>
         </div>
-        <div class="goal-list" id="subGoalList">
-          <!-- Naplní JS -->
+        <div class="goals-title">
+          <h2>💰 Donategoal</h2>
+          <div class="goals-subtitle" id="goalHeader">600 / 200 000 Kč</div>
         </div>
-      </section>
-
-      <!-- DONATEGOAL -->
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">Donategoal</h2>
-          <div class="card-subtitle" id="goalHeader">600 / 200 000 Kč</div>
+      </div>
+      
+      <div class="goals-table">
+        <!-- LEVÝ SLOUPEC - SUBGOALS -->
+        <div class="goals-column">
+          <div class="goals-list" id="subGoalList">
+            <!-- Naplní JS -->
+          </div>
         </div>
-        <div class="goal-list" id="goalList">
-          <!-- Naplní JS -->
+        
+        <!-- PRAVÝ SLOUPEC - DONATEGOALS -->
+        <div class="goals-column">
+          <div class="goals-list" id="goalList">
+            <!-- Naplní JS -->
+          </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
     <!-- PRAVIDLA PŘIDÁVÁNÍ ČASU -->
     <section class="card rules-card">
       <div class="card-header">
-        <h2 class="card-title">Pravidla přidávání času</h2>
+        <h2 class="card-title">📜 Pravidla přidávání času</h2>
         <div class="card-subtitle">automaticky</div>
       </div>
       <div class="rules-list">
         <div class="rule">
-          <div class="rule-name">T1 sub</div>
+          <div class="rule-name">💗 T1 sub</div>
           <div class="rule-value">+10 min</div>
         </div>
         <div class="rule">
-          <div class="rule-name">T2 sub</div>
+          <div class="rule-name">💗 T2 sub</div>
           <div class="rule-value">+20 min</div>
         </div>
         <div class="rule">
-          <div class="rule-name">T3 sub</div>
+          <div class="rule-name">💗 T3 sub</div>
           <div class="rule-value">+30 min</div>
         </div>
         <div class="rule">
-          <div class="rule-name">100 Kč donate</div>
+          <div class="rule-name">💗 100 Kč donate</div>
           <div class="rule-value">+15 min</div>
         </div>
       </div>
+      <div class="note-text">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
     </section>
 
     <!-- TWITCH A POSLEDNÍ AKCE -->
@@ -171,7 +177,7 @@
       <!-- POSLEDNÍ AKCE -->
       <section class="card">
         <div class="card-header">
-          <h2 class="card-title">Poslední akce</h2>
+          <h2 class="card-title">🧾 Poslední akce</h2>
           <div class="card-subtitle">posledních 10</div>
         </div>
         <div class="activity-list" id="feed">
