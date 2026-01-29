@@ -563,6 +563,74 @@ function renderDashboard(data) {
 }
 
 // ===== API FETCH =====
+function syncLocalStorageWithAPI(apiData) {
+  if (!apiData) return;
+  
+  // 1. Peníze – vytvoř donátory z topDonors
+  const donorsFromAPI = (apiData.topDonors || []).map(d => ({
+    username: d.user,
+    total: d.totalKc,
+    addedMinutes: Math.round((d.addedSec || 0) / 60)
+  }));
+  
+  if (donorsFromAPI.length > 0) {
+    localStorage.setItem('fufathon_donors', JSON.stringify(donorsFromAPI));
+  }
+  
+  // 2. Suby
+  const subs = {
+    t1: apiData.t1 || 0,
+    t2: apiData.t2 || 0,
+    t3: apiData.t3 || 0,
+    total: apiData.subsTotal || 0
+  };
+  localStorage.setItem('fufathon_subs', JSON.stringify(subs));
+  
+  // 3. Události (z lastEvents)
+  const eventsFromAPI = (apiData.lastEvents || []).map(e => {
+    const event = {
+      timestamp: e.ts || Date.now(),
+      type: 'api_event',
+      text: e.text || ''
+    };
+    
+    if (e.kind === 'donation') {
+      event.type = 'donation';
+      event.username = e.sender || 'Anonym';
+      event.amount = e.amountKc || 0;
+      event.addedMinutes = Math.floor((event.amount / 100) * 15);
+    } else if (e.kind === 'sub') {
+      event.type = 'sub';
+      event.username = e.sender || 'Anonym';
+      event.tier = e.tier || 1;
+      event.addedMinutes = SUB_MINUTES[event.tier] || 10;
+    } else if (e.kind === 'resub') {
+      event.type = 'resub';
+      event.username = e.sender || 'Anonym';
+      event.tier = e.tier || 1;
+      event.months = e.months || 1;
+      event.addedMinutes = SUB_MINUTES[event.tier] || 10;
+    } else if (e.kind === 'gift') {
+      event.type = 'gift';
+      event.gifter = e.sender || 'Anonym';
+      event.tier = e.tier || 1;
+      event.count = e.count || 1;
+      event.addedMinutes = (SUB_MINUTES[event.tier] || 10) * event.count;
+    }
+    
+    return event;
+  });
+  
+  // Sluč s existujícími událostmi
+  const existingEvents = JSON.parse(localStorage.getItem('fufathon_events') || '[]');
+  const mergedEvents = [...eventsFromAPI, ...existingEvents]
+    .filter((v, i, a) => a.findIndex(e => e.timestamp === v.timestamp) === i)
+    .slice(0, 50);
+  
+  localStorage.setItem('fufathon_events', JSON.stringify(mergedEvents));
+  
+  console.log('🔄 Data synchronizována z API');
+}
 async function fetchDashboardData() {
   try {
     const response = await fetch(API_STATE, { cache: "no-store" });
@@ -861,7 +929,7 @@ function testSub(tier, username = 'SUB_USER') {
   // 1. Přidej čas
   const minutes = SUB_MINUTES[tier] || 10;
   addMinutesToSubathon(minutes);
-  
+  syncLocalStorageWithAPI
   // 2. Ulož událost
   saveEventToHistory({
     type: 'sub',
