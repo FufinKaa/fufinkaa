@@ -1111,6 +1111,23 @@ function initDashboard() {
   
   // Načti existující data
   loadExistingData();
+
+  async function syncLocalDataToAPI() {
+  try {
+    // Načti naše lokální data
+    const donors = JSON.parse(localStorage.getItem('fufathon_donors') || '[]');
+    const subs = JSON.parse(localStorage.getItem('fufathon_subs') || '{"t1":0,"t2":0,"t3":0,"total":0}');
+    
+    // Pokud máme víc subů než API, pošleme update
+    // (Tady bychom potřebovali API endpoint pro update, zatím jen log)
+    if (subs.total > 0) {
+      console.log('📤 Mám lokální data k odeslání na API:', { subs, donors });
+      // TODO: Zde by bylo volání na API endpoint pro update stavu
+    }
+  } catch (error) {
+    console.error('Chyba při synchronizaci dat:', error);
+  }
+}
   
   // Načti data z API
   fetchDashboardData();
