@@ -491,3 +491,168 @@ function initDashboard() {
 
 // ===== START =====
 document.addEventListener("DOMContentLoaded", initDashboard);
+
+
+
+// ===== MANUAL TEST FUNCTIONS =====
+function addManualTestButtons() {
+  // Vytvoříme testovací panel
+  const testPanel = document.createElement('div');
+  testPanel.id = 'testPanel';
+  testPanel.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid #7b2ff7;
+    border-radius: 12px;
+    padding: 15px;
+    z-index: 9999;
+    box-shadow: 0 5px 25px rgba(123, 47, 247, 0.3);
+    font-family: inherit;
+    min-width: 250px;
+  `;
+  
+  testPanel.innerHTML = `
+    <div style="margin-bottom: 10px; color: #f107a3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+      <span>🧪 TEST PANEL</span>
+      <button onclick="document.getElementById('testPanel').remove()" style="margin-left: auto; background: transparent; border: none; color: #fff; cursor: pointer; font-size: 18px;">
+        ×
+      </button>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button onclick="testDonate(100, 'TEST_USER')" style="padding: 8px 12px; background: linear-gradient(135deg, #00C030, #00a028); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        💰 Donate 100 Kč
+      </button>
+      
+      <button onclick="testDonate(500, 'VIP_USER')" style="padding: 8px 12px; background: linear-gradient(135deg, #ff6b6b, #ff5252); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        💸 Donate 500 Kč
+      </button>
+      
+      <button onclick="testSub(1, 'SUB_USER')" style="padding: 8px 12px; background: linear-gradient(135deg, #9146FF, #7b2ff7); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        ⭐ T1 Sub (10 min)
+      </button>
+      
+      <button onclick="testSub(2, 'SUB_USER_VIP')" style="padding: 8px 12px; background: linear-gradient(135deg, #FFD700, #FFA500); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        ⭐⭐ T2 Sub (20 min)
+      </button>
+      
+      <button onclick="testGiftSub(1, 3, 'GIFTER_USER')" style="padding: 8px 12px; background: linear-gradient(135deg, #00D4AA, #00b894); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        🎁 3× Gifted T1 Sub
+      </button>
+      
+      <button onclick="resetTestData()" style="padding: 8px 12px; background: linear-gradient(135deg, #666, #444); color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; font-size: 12px;">
+        🔄 Reset test data
+      </button>
+    </div>
+    
+    <div style="margin-top: 15px; font-size: 11px; color: #888; border-top: 1px solid #333; padding-top: 10px;">
+      <div>💰 100 Kč = 15 minut</div>
+      <div>⭐ T1 = 10 min, T2 = 20 min, T3 = 30 min</div>
+    </div>
+  `;
+  
+  document.body.appendChild(testPanel);
+}
+
+// Testovací funkce
+function testDonate(amount, username = 'TEST_USER') {
+  console.log(`🧪 TEST Donate: ${amount} Kč od ${username}`);
+  
+  // 1. Přidej čas
+  const minutes = Math.floor((amount / 100) * 15);
+  addMinutesToSubathon(minutes);
+  
+  // 2. Ulož událost
+  saveEventToHistory({
+    type: 'donation',
+    username: username,
+    amount: amount,
+    currency: 'CZK',
+    message: 'Testovací donate',
+    timestamp: Date.now(),
+    addedMinutes: minutes
+  });
+  
+  // 3. Aktualizuj top donátory
+  updateTopDonors(username, amount);
+  
+  // 4. Aktualizuj peníze
+  updateTotalMoney();
+  
+  // 5. Zobraz notifikaci
+  showTimeAddedNotification(minutes);
+  
+  console.log(`✅ Přidáno ${minutes} minut`);
+}
+
+function testSub(tier, username = 'SUB_USER') {
+  console.log(`🧪 TEST Sub: T${tier} od ${username}`);
+  
+  // 1. Přidej čas
+  const minutes = SUB_MINUTES[tier] || 10;
+  addMinutesToSubathon(minutes);
+  
+  // 2. Ulož událost
+  saveEventToHistory({
+    type: 'sub',
+    username: username,
+    tier: tier,
+    months: 1,
+    message: 'Testovací sub',
+    timestamp: Date.now(),
+    addedMinutes: minutes
+  });
+  
+  // 3. Aktualizuj počty subů
+  updateSubCount(tier);
+  
+  // 4. Zobraz notifikaci
+  showTimeAddedNotification(minutes);
+  
+  console.log(`✅ Přidáno ${minutes} minut`);
+}
+
+function testGiftSub(tier, count, gifter = 'GIFTER_USER') {
+  console.log(`🧪 TEST Gift Sub: ${count}× T${tier} od ${gifter}`);
+  
+  // 1. Přidej čas
+  const minutes = (SUB_MINUTES[tier] || 10) * count;
+  addMinutesToSubathon(minutes);
+  
+  // 2. Ulož událost
+  saveEventToHistory({
+    type: 'gift',
+    gifter: gifter,
+    recipient: 'Komunita',
+    tier: tier,
+    count: count,
+    timestamp: Date.now(),
+    addedMinutes: minutes
+  });
+  
+  // 3. Aktualizuj počty subů
+  updateSubCount(tier, count);
+  
+  // 4. Zobraz notifikaci
+  showTimeAddedNotification(minutes);
+  
+  console.log(`✅ Přidáno ${minutes} minut`);
+}
+
+function resetTestData() {
+  if (confirm('Opravdu chceš smazat všechna testovací data?')) {
+    localStorage.removeItem('fufathon_events');
+    localStorage.removeItem('fufathon_donors');
+    localStorage.removeItem('fufathon_subs');
+    
+    // Resetuj zobrazení
+    updateActivityFeed([]);
+    updateTopDonorsTable([]);
+    updateSubsDisplay({t1: 0, t2: 0, t3: 0, total: 0});
+    updateTotalMoney();
+    
+    alert('✅ Testovací data smazána!');
+  }
+}
