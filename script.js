@@ -724,7 +724,34 @@ function updateTotalMoney() {
 // ===== LOAD EXISTING DATA =====
 async function loadExistingData() {
   try {
-    // 1. NEJDŘÍVE ZKUS NAČÍST Z API
+    console.log('🔄 Načítám data...');
+    
+    // 1. NEJPRVE ZKUS NAČÍST Z localStorage
+    const existingSubs = JSON.parse(localStorage.getItem('fufathon_subs') || '{"t1":0,"t2":0,"t3":0,"total":0}');
+    const existingDonors = JSON.parse(localStorage.getItem('fufathon_donors') || '[]');
+    const existingEvents = JSON.parse(localStorage.getItem('fufathon_events') || '[]');
+    
+    // Pokud už máš data v localStorage (suby nebo donoři), POUŽIJ JE
+    if (existingSubs.total > 0 || existingDonors.length > 0) {
+      console.log('📊 Používám existující data z localStorage:', {
+        subs: existingSubs,
+        donorsCount: existingDonors.length,
+        eventsCount: existingEvents.length
+      });
+      
+      // Aktualizuj UI přímo z localStorage
+      updateTopDonorsTable(existingDonors);
+      updateActivityFeed(existingEvents);
+      updateSubsDisplay(existingSubs);
+      updateTotalMoney();
+      
+      console.log('✅ UI aktualizováno z localStorage');
+      return; // DŮLEŽITÉ: UKONČI FUNKCI ZDE – API NENAČÍTEJ!
+    }
+    
+    console.log('📭 localStorage je prázdný, načítám z API...');
+    
+    // 2. POUZE pokud je localStorage prázdný, načti z API
     const apiResponse = await fetch(API_STATE, { cache: "no-store" });
     
     if (apiResponse.ok) {
@@ -761,28 +788,23 @@ async function loadExistingData() {
       }));
       
       // Sloučit s existujícími událostmi (max 50)
-      const existingEvents = JSON.parse(localStorage.getItem('fufathon_events') || '[]');
       const mergedEvents = [...eventsFromAPI, ...existingEvents]
         .filter((v, i, a) => a.findIndex(e => e.timestamp === v.timestamp) === i)
         .slice(0, 50);
       localStorage.setItem('fufathon_events', JSON.stringify(mergedEvents));
       
-      console.log('🔄 Data načtena z API a synchronizována s localStorage');
+      console.log('🔄 Data načtena z API a uložena do localStorage');
+      
+      // Aktualizuj UI
+      updateTopDonorsTable(donorsFromAPI);
+      updateActivityFeed(mergedEvents);
+      updateSubsDisplay(subsFromAPI);
+      updateTotalMoney();
+      
+      console.log('✅ UI aktualizováno z API');
+    } else {
+      console.warn('⚠️ API neodpovědělo, používám prázdná data');
     }
-    
-    // 2. PAK VŽDY NAČTI Z localStorage (teď už obsahuje data z API)
-    const donors = JSON.parse(localStorage.getItem('fufathon_donors') || '[]');
-    updateTopDonorsTable(donors);
-    
-    const events = JSON.parse(localStorage.getItem('fufathon_events') || '[]');
-    updateActivityFeed(events);
-    
-    const subs = JSON.parse(localStorage.getItem('fufathon_subs') || '{"t1":0,"t2":0,"t3":0,"total":0}');
-    updateSubsDisplay(subs);
-    
-    updateTotalMoney();
-    
-    console.log('📊 Data načtena a UI aktualizováno');
     
   } catch (error) {
     console.error('❌ Chyba při načítání dat:', error);
