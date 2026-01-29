@@ -13,130 +13,131 @@
 
   <main class="container">
     
-    <!-- HEADER S TIMEREM -->
-    <section class="card hero-card">
-      <div class="hero-header">
-        <div class="hero-title">
-          <h1>FUFATHON Dashboard</h1>
-          <div class="subtitle">přehled o všem ✨</div>
+    <!-- HLAVNÍ HEADER -->
+    <header class="header">
+      <h1>FUFATHON Dashboard</h1>
+      <div class="subtitle">přehled o všem 🏅</div>
+      
+      <div class="header-controls">
+        <div class="status-pill">
+          <span class="live-dot"></span>
+          <span class="status-text">LIVE</span>
         </div>
-        <div class="hero-status">
-          <div class="status-pill">
-            <span class="live-dot"></span>
-            <span class="status-text">LIVE</span>
-          </div>
-          <button class="theme-btn" id="themeBtn" type="button" aria-label="Přepnout den/noc">
-            <span class="theme-icon" id="themeIcon">🌙</span>
-            <span class="theme-text" id="themeText">Noc</span>
-          </button>
+        <button class="theme-btn" id="themeBtn" type="button" aria-label="Přepnout den/noc">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+          <span class="theme-text" id="themeText">Noc</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- TIMER SECTION -->
+    <section class="card timer-card">
+      <div class="timer-label">DO KONCE ZBÝVÁ</div>
+      <div class="timer-display" id="timeLeft">00:00:00</div>
+      <div class="timer-info" id="endsAtText">Konec: 28. 01. 2026 16:48</div>
+    </section>
+
+    <!-- STATISTIKY VEDLE SEBE -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Vybráno</div>
+        <div class="stat-value" id="money">600 Kč</div>
+        <div class="stat-sub" id="moneySmall">600 / 200 000 Kč</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Suby celkem</div>
+        <div class="stat-value" id="subsTotal">11</div>
+        <div class="stat-sub" id="subsBreak">9 / 1 / 1</div>
+      </div>
+    </div>
+
+    <!-- PROGRESS BARy -->
+    <div class="progress-grid">
+      <div class="progress-card">
+        <div class="progress-header">
+          <div class="progress-title">Čas</div>
+          <div class="progress-percent" id="timePct">100%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="timeProgress" style="width: 100%"></div>
         </div>
       </div>
-
-      <div class="timer-section">
-        <div class="timer-main">
-          <div class="timer-label">Do konce zbývá</div>
-          <div class="timer-display" id="timeLeft">00:00:00</div>
-          <div class="timer-info" id="endsAtText">Konec: 28.01.2026 16:48</div>
+      
+      <div class="progress-card">
+        <div class="progress-header">
+          <div class="progress-title">Donate</div>
+          <div class="progress-percent" id="moneyPct">0.3%</div>
         </div>
-        <div class="timer-stats">
-          <div class="stat-box">
-            <div class="stat-label">Vybráno</div>
-            <div class="stat-value" id="money">600 Kč</div>
-            <div class="stat-sub" id="moneySmall">600 / 200 000 Kč</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Suby celkem</div>
-            <div class="stat-value" id="subsTotal">11</div>
-            <div class="stat-sub" id="subsBreak">9 / 1 / 1</div>
-          </div>
+        <div class="progress-bar">
+          <div class="progress-fill pink" id="moneyProgress" style="width: 0.3%"></div>
+        </div>
+      </div>
+      
+      <div class="progress-card">
+        <div class="progress-header">
+          <div class="progress-title">Suby</div>
+          <div class="progress-percent" id="subPct">1.1%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill cyan" id="subGoalBar" style="width: 1.1%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HLAVNÍ OBSAH -->
+    <div class="content-grid">
+      <!-- SUBGOAL -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Subgoal</h2>
+          <div class="card-subtitle" id="subGoalHeader">11 / 1000 subs</div>
+        </div>
+        <div class="goal-list" id="subGoalList">
+          <!-- Naplní JS -->
+        </div>
+      </section>
+
+      <!-- DONATEGOAL -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Donategoal</h2>
+          <div class="card-subtitle" id="goalHeader">600 / 200 000 Kč</div>
+        </div>
+        <div class="goal-list" id="goalList">
+          <!-- Naplní JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- PRAVIDLA PŘIDÁVÁNÍ ČASU -->
+    <section class="card rules-card">
+      <div class="card-header">
+        <h2 class="card-title">Pravidla přidávání času</h2>
+        <div class="card-subtitle">automaticky</div>
+      </div>
+      <div class="rules-list">
+        <div class="rule">
+          <div class="rule-name">T1 sub</div>
+          <div class="rule-value">+10 min</div>
+        </div>
+        <div class="rule">
+          <div class="rule-name">T2 sub</div>
+          <div class="rule-value">+20 min</div>
+        </div>
+        <div class="rule">
+          <div class="rule-name">T3 sub</div>
+          <div class="rule-value">+30 min</div>
+        </div>
+        <div class="rule">
+          <div class="rule-name">100 Kč donate</div>
+          <div class="rule-value">+15 min</div>
         </div>
       </div>
     </section>
 
-    <!-- HRAVÝ PROGRESS -->
-    <div class="progress-row">
-      <div class="progress-item">
-        <div class="progress-label">Čas</div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="timeProgress" style="width: 100%"></div>
-        </div>
-        <div class="progress-pct" id="timePct">100%</div>
-      </div>
-      <div class="progress-item">
-        <div class="progress-label">Donate</div>
-        <div class="progress-bar">
-          <div class="progress-fill pink" id="moneyProgress" style="width: 0.3%"></div>
-        </div>
-        <div class="progress-pct" id="moneyPct">0.3%</div>
-      </div>
-      <div class="progress-item">
-        <div class="progress-label">Suby</div>
-        <div class="progress-bar">
-          <div class="progress-fill cyan" id="subGoalBar" style="width: 1.1%"></div>
-        </div>
-        <div class="progress-pct" id="subPct">1.1%</div>
-      </div>
-    </div>
-
-    <!-- HLAVNÍ OBSAH V JEDNOM SLOUPCI -->
-    <div class="main-column">
-
-      <!-- SUBGOAL A DONATEGOAL VEDLE SEBE -->
-      <div class="double-card">
-        <!-- SUBGOAL -->
-        <section class="card compact">
-          <div class="card-header">
-            <h2 class="card-title">🎯 Subgoal</h2>
-            <div class="card-subtitle" id="subGoalHeader">11 / 1000 subs</div>
-          </div>
-          <div class="goals-list" id="subGoalList">
-            <!-- Naplní JS -->
-          </div>
-        </section>
-
-        <!-- DONATEGOAL -->
-        <section class="card compact">
-          <div class="card-header">
-            <h2 class="card-title">💰 Donategoal</h2>
-            <div class="card-subtitle" id="goalHeader">600 / 200 000 Kč</div>
-          </div>
-          <div class="goals-list" id="goalList">
-            <!-- Naplní JS -->
-          </div>
-        </section>
-      </div>
-
-      <!-- PRAVIDLA PŘIDÁVÁNÍ ČASU -->
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">📜 Pravidla přidávání času</h2>
-          <div class="card-subtitle">automaticky</div>
-        </div>
-        <div class="rules-grid">
-          <div class="rule-item">
-            <div class="rule-icon">💗</div>
-            <div class="rule-text">T1 sub</div>
-            <div class="rule-value">+10 min</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-icon">💗</div>
-            <div class="rule-text">T2 sub</div>
-            <div class="rule-value">+20 min</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-icon">💗</div>
-            <div class="rule-text">T3 sub</div>
-            <div class="rule-value">+30 min</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-icon">💗</div>
-            <div class="rule-text">100 Kč donate</div>
-            <div class="rule-value">+15 min</div>
-          </div>
-        </div>
-        <div class="note-text">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
-      </section>
-
+    <!-- TWITCH A POSLEDNÍ AKCE -->
+    <div class="content-grid">
       <!-- TWITCH STREAM -->
       <section class="card">
         <div class="card-header">
@@ -155,43 +156,17 @@
         </div>
       </section>
 
-      <!-- POSLEDNÍ AKCE A TOP DONOŘI VEDLE SEBE -->
-      <div class="double-card">
-        <!-- POSLEDNÍ AKCE -->
-        <section class="card compact">
-          <div class="card-header">
-            <h2 class="card-title">🧾 Poslední akce</h2>
-            <div class="card-subtitle">posledních 10</div>
-          </div>
-          <div class="activity-feed" id="feed">
-            <!-- Naplní JS -->
-          </div>
-        </section>
-
-        <!-- TOP DONOŘI -->
-        <section class="card compact">
-          <div class="card-header">
-            <h2 class="card-title">🏆 Top 5 podporovatelů</h2>
-            <div class="card-subtitle">podle Kč celkem 💜</div>
-          </div>
-          <div class="donors-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Jméno</th>
-                  <th>Kč</th>
-                </tr>
-              </thead>
-              <tbody id="topTableBody">
-                <!-- Naplní JS -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-    </div> <!-- konec main-column -->
+      <!-- POSLEDNÍ AKCE -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Poslední akce</h2>
+          <div class="card-subtitle">posledních 10</div>
+        </div>
+        <div class="activity-list" id="feed">
+          <!-- Naplní JS -->
+        </div>
+      </section>
+    </div>
 
   </main>
 
