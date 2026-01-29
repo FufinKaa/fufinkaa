@@ -1,5 +1,5 @@
 // ============================
-// FUFATHON Dashboard - FINÁLNÍ VERZE s TIMEREM
+// FUFATHON Dashboard - OPRAVENÁ VERZE
 // ============================
 
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
@@ -109,9 +109,6 @@ function addMinutesToSubathon(minutes) {
   
   console.log(`➕ Přidáno ${minutes} minut. Nový konec: ${subathonEndTime.toLocaleString()}`);
   updateTimers();
-  
-  // Synchronizuj s API (volitelné)
-  syncEndTimeWithAPI();
 }
 
 function addTimeForDonate(amountCzk) {
@@ -144,15 +141,6 @@ function showTimeAddedNotification(minutes) {
     notification.classList.add('fade-out');
     setTimeout(() => notification.remove(), 500);
   }, 3000);
-}
-
-async function syncEndTimeWithAPI() {
-  try {
-    // Zde můžeš přidat volání na API pro uložení nového endTime
-    // await fetch(API_STATE, { method: 'POST', body: JSON.stringify({ endsAt: subathonEndTime }) });
-  } catch (error) {
-    console.log('⚠️ Nelze synchronizovat čas s API:', error);
-  }
 }
 
 function updateTimers() {
@@ -353,7 +341,6 @@ function connectStreamElements() {
   socket.on('event', (data) => {
     console.log('🎬 StreamElements RAW event:', data);
     
-    // NOVÉ ZPRACOVÁNÍ - používáme data.type místo data.listener
     if (!data || !data.type) {
       console.log('⚠️ Neplatná událost:', data);
       return;
@@ -399,9 +386,6 @@ function connectStreamElements() {
       default:
         console.log('ℹ️ Nezpracovaný typ:', data.type);
     }
-    
-    // Načti nová data z API
-    fetchDashboardData();
   });
   
   socket.on('error', (err) => {
@@ -525,7 +509,6 @@ function handleTipEvent(data) {
   });
   
   addTimeForDonate(amountCzk);
-  
   updateTopDonors(username, amountCzk);
   updateTotalMoney();
 }
@@ -564,74 +547,6 @@ function renderDashboard(data) {
 }
 
 // ===== API FETCH =====
-function syncLocalStorageWithAPI(apiData) {
-  if (!apiData) return;
-  
-  // 1. Peníze – vytvoř donátory z topDonors
-  const donorsFromAPI = (apiData.topDonors || []).map(d => ({
-    username: d.user,
-    total: d.totalKc,
-    addedMinutes: Math.round((d.addedSec || 0) / 60)
-  }));
-  
-  if (donorsFromAPI.length > 0) {
-    localStorage.setItem('fufathon_donors', JSON.stringify(donorsFromAPI));
-  }
-  
-  // 2. Suby
-  const subs = {
-    t1: apiData.t1 || 0,
-    t2: apiData.t2 || 0,
-    t3: apiData.t3 || 0,
-    total: apiData.subsTotal || 0
-  };
-  localStorage.setItem('fufathon_subs', JSON.stringify(subs));
-  
-  // 3. Události (z lastEvents)
-  const eventsFromAPI = (apiData.lastEvents || []).map(e => {
-    const event = {
-      timestamp: e.ts || Date.now(),
-      type: 'api_event',
-      text: e.text || ''
-    };
-    
-    if (e.kind === 'donation') {
-      event.type = 'donation';
-      event.username = e.sender || 'Anonym';
-      event.amount = e.amountKc || 0;
-      event.addedMinutes = Math.floor((event.amount / 100) * 15);
-    } else if (e.kind === 'sub') {
-      event.type = 'sub';
-      event.username = e.sender || 'Anonym';
-      event.tier = e.tier || 1;
-      event.addedMinutes = SUB_MINUTES[event.tier] || 10;
-    } else if (e.kind === 'resub') {
-      event.type = 'resub';
-      event.username = e.sender || 'Anonym';
-      event.tier = e.tier || 1;
-      event.months = e.months || 1;
-      event.addedMinutes = SUB_MINUTES[event.tier] || 10;
-    } else if (e.kind === 'gift') {
-      event.type = 'gift';
-      event.gifter = e.sender || 'Anonym';
-      event.tier = e.tier || 1;
-      event.count = e.count || 1;
-      event.addedMinutes = (SUB_MINUTES[event.tier] || 10) * event.count;
-    }
-    
-    return event;
-  });
-  
-  // Sluč s existujícími událostmi
-  const existingEvents = JSON.parse(localStorage.getItem('fufathon_events') || '[]');
-  const mergedEvents = [...eventsFromAPI, ...existingEvents]
-    .filter((v, i, a) => a.findIndex(e => e.timestamp === v.timestamp) === i)
-    .slice(0, 50);
-  
-  localStorage.setItem('fufathon_events', JSON.stringify(mergedEvents));
-  
-  console.log('🔄 Data synchronizována z API');
-}
 async function fetchDashboardData() {
   try {
     const response = await fetch(API_STATE, { cache: "no-store" });
@@ -998,7 +913,7 @@ function testSub(tier, username = 'SUB_USER') {
   // 1. Přidej čas
   const minutes = SUB_MINUTES[tier] || 10;
   addMinutesToSubathon(minutes);
-  syncLocalStorageWithAPI
+  
   // 2. Ulož událost
   saveEventToHistory({
     type: 'sub',
@@ -1111,26 +1026,6 @@ function initDashboard() {
   
   // Načti existující data
   loadExistingData();
-
-  async function syncLocalDataToAPI() {
-  try {
-    // Načti naše lokální data
-    const donors = JSON.parse(localStorage.getItem('fufathon_donors') || '[]');
-    const subs = JSON.parse(localStorage.getItem('fufathon_subs') || '{"t1":0,"t2":0,"t3":0,"total":0}');
-    
-    // Pokud máme víc subů než API, pošleme update
-    // (Tady bychom potřebovali API endpoint pro update, zatím jen log)
-    if (subs.total > 0) {
-      console.log('📤 Mám lokální data k odeslání na API:', { subs, donors });
-      // TODO: Zde by bylo volání na API endpoint pro update stavu
-    }
-  } catch (error) {
-    console.error('Chyba při synchronizaci dat:', error);
-  }
-}
-  
-  // Načti data z API
-  fetchDashboardData();
   
   // Připoj StreamElements
   connectStreamElements();
@@ -1138,13 +1033,13 @@ function initDashboard() {
   // ✅ PŘIDEJ TESTOVACÍ PANEL
   addManualTestButtons();
   
-  // Auto-refresh
-  setInterval(fetchDashboardData, 5000);
+  // ⚠️ DŮLEŽITÉ: VYPNUTO auto-refresh (aby se data neztrácela)
+  // setInterval(fetchDashboardData, 5000); // ZAKOMENTOVÁNO!
   
   // Aktualizuj timery každou sekundu
   setInterval(updateTimers, 1000);
   
-  console.log('🚀 Dashboard inicializován!');
+  console.log('🚀 Dashboard inicializován! (auto-refresh vypnuto)');
 }
 
 // ===== START =====
