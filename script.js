@@ -1,5 +1,5 @@
 // ============================
-// FUFATHON Dashboard - Kompletní verze s emoji
+// FUFATHON Dashboard - FINÁLNÍ VERZE
 // ============================
 
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
@@ -9,24 +9,53 @@ const SE_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsI
 
 const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
 
-// DONATEGOAL (s emoji podle obrázku)
+// DONATEGOAL - VŠECHNY GOALS Z SCREENSHOTU
 const GOALS = [
+  { amount: 5000, icon: "🎬", title: "Movie night" },
+  { amount: 10000, icon: "😏", title: "Q&A bez cenzury" },
+  { amount: 15000, icon: "👻", title: "Horror Night" },
+  { amount: 20000, icon: "🍔", title: "Jídlo podle chatu" },
+  { amount: 25000, icon: "🤡", title: "Kostým stream" },
+  { amount: 30000, icon: "💃", title: "Just Dance" },
+  { amount: 35000, icon: "🧱", title: "Lego" },
+  { amount: 40000, icon: "🍣", title: "Asijská ochutnávka" },
+  { amount: 45000, icon: "⛏️", title: "Minecraft SpeedRun DUO" },
+  { amount: 50000, icon: "🎤", title: "Karaoke stream" },
+  { amount: 55000, icon: "🔫", title: "Battle Royale Challenge" },
+  { amount: 60000, icon: "🎳", title: "Bowling" },
+  { amount: 65000, icon: "💦", title: "Try Not To Laugh" },
+  { amount: 70000, icon: "👣", title: "Běžecký pás" },
+  { amount: 75000, icon: "🍹", title: "Drunk Stream" },
+  { amount: 80000, icon: "🧍‍♀️", title: "12h Stream ve stoje" },
+  { amount: 85000, icon: "🕹️", title: "Split Fiction w/ Juraj" },
+  { amount: 90000, icon: "🎁", title: "Mystery box opening" },
+  { amount: 95000, icon: "🏆", title: "Turnaj v LoLku" },
+  { amount: 100000, icon: "🎉", title: "Stodolní ve stylu" },
+  { amount: 110000, icon: "🏎️", title: "Motokáry" },
   { amount: 120000, icon: "🎧", title: "ASMR stream" },
   { amount: 125000, icon: "⚡", title: "Bolt Tower" },
   { amount: 130000, icon: "🥶", title: "Otužování" },
   { amount: 140000, icon: "⛳", title: "MiniGolf" },
   { amount: 150000, icon: "🫧", title: "Vířivka" },
-  { amount: 160000, icon: "🎨", title: "Zážitkové ART studio" }
+  { amount: 160000, icon: "🎨", title: "Zážitkové ART studio" },
+  { amount: 170000, icon: "🐎", title: "Jízda na koni" },
+  { amount: 180000, icon: "🏔️", title: "Výšlap na Lysou horu" },
+  { amount: 190000, icon: "🖊️", title: "Tetování" },
+  { amount: 200000, icon: "🏙️", title: "Víkend v Praze" }
 ];
 
-// SUBGOAL (s emoji podle obrázku)
+// SUBGOAL - VŠECHNY GOALS Z SCREENSHOTU
 const SUB_GOALS = [
   { amount: 100, icon: "🍳", title: "Snídaně podle chatu" },
   { amount: 200, icon: "💄", title: "Make-up challenge" },
   { amount: 300, icon: "👗", title: "Outfit vybíráte vy" },
   { amount: 400, icon: "⚖️", title: "Kontrola váhy od teď" },
   { amount: 500, icon: "⚔️", title: "1v1 s chatem" },
-  { amount: 1000, icon: "🏆", title: "Subgoal hlavní" }
+  { amount: 600, icon: "🎮", title: "Vybíráte hru na hlavní blok dne" },
+  { amount: 700, icon: "👑", title: "Rozhoduje o dni" },
+  { amount: 800, icon: "🍽️", title: "Luxusní restaurace v Ostravě" },
+  { amount: 900, icon: "👾", title: "Turnaj ve Fortnite" },
+  { amount: 1000, icon: "🏎️", title: "Jízda ve sporťáku" }
 ];
 
 // ===== UTILITIES =====
@@ -103,10 +132,6 @@ function renderGoals(money) {
   
   list.innerHTML = goalsHTML;
   $("#goalHeader").textContent = `${formatKc(m)} / ${formatKc(GOAL_TOTAL)} Kč`;
-  
-  const goalPercent = Math.min(100, (m / GOAL_TOTAL) * 100);
-  $("#moneyProgress").style.width = `${goalPercent}%`;
-  $("#moneyPct").textContent = `${goalPercent.toFixed(1)}%`;
 }
 
 // ===== SUBGOAL RENDER =====
@@ -129,10 +154,30 @@ function renderSubGoals(subsTotal) {
   
   list.innerHTML = subGoalsHTML;
   $("#subGoalHeader").textContent = `${subs} / ${SUB_GOAL_TOTAL} subs`;
+}
+
+// ===== TOP DONORS =====
+function renderTopDonors(donors) {
+  const tbody = $("#topTableBody");
+  if (!tbody) return;
   
-  const subGoalPercent = Math.min(100, (subs / SUB_GOAL_TOTAL) * 100);
-  $("#subGoalBar").style.width = `${subGoalPercent}%`;
-  $("#subPct").textContent = `${subGoalPercent.toFixed(1)}%`;
+  const donorsArray = donors || [];
+  const rows = donorsArray.slice(0, 5).map((donor, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${donor.user || "Anonym"}</strong></td>
+      <td>${formatKc(donor.totalKc || 0)} Kč</td>
+      <td>+${Math.round((donor.addedSec || 0) / 60)} min</td>
+    </tr>
+  `).join('');
+  
+  tbody.innerHTML = rows || `
+    <tr>
+      <td colspan="4" class="mutedCell">
+        Zatím žádní dárci... buď první! 💜
+      </td>
+    </tr>
+  `;
 }
 
 // ===== ACTIVITY FEED =====
@@ -264,62 +309,9 @@ function renderDashboard(data) {
   // Zbytek
   renderGoals(money);
   renderSubGoals(subsTotal);
+  renderTopDonors(data.topDonors);
   renderActivityFeed(data.lastEvents || data.events || []);
 }
-
-// ===== DONATEGOAL RENDER =====
-function renderGoals(money) {
-  const m = Number(money) || 0;
-  const list = $("#goalList");
-  if (!list) return;
-  
-  const goalsHTML = GOALS.map(g => {
-    return `
-      <div class="goal-row">
-        <div class="goal-name">
-          <span>${g.icon}</span>
-          <span>${g.title}</span>
-        </div>
-        <div class="goal-amount">${formatKc(g.amount)} Kč</div>
-      </div>
-    `;
-  }).join('');
-  
-  list.innerHTML = goalsHTML;
-  $("#goalHeader").textContent = `${formatKc(m)} / ${formatKc(GOAL_TOTAL)} Kč`;
-  
-  // ODSTRANĚNO: progress pro donate
-  // const goalPercent = Math.min(100, (m / GOAL_TOTAL) * 100);
-  // $("#moneyProgress").style.width = `${goalPercent}%`;
-  // $("#moneyPct").textContent = `${goalPercent.toFixed(1)}%`;
-}
-
-// ===== SUBGOAL RENDER =====
-function renderSubGoals(subsTotal) {
-  const subs = Number(subsTotal) || 0;
-  const list = $("#subGoalList");
-  if (!list) return;
-  
-  const subGoalsHTML = SUB_GOALS.map(g => {
-    return `
-      <div class="goal-row">
-        <div class="goal-name">
-          <span>${g.icon}</span>
-          <span>${g.title}</span>
-        </div>
-        <div class="goal-amount">${g.amount} subs</div>
-      </div>
-    `;
-  }).join('');
-  
-  list.innerHTML = subGoalsHTML;
-  $("#subGoalHeader").textContent = `${subs} / ${SUB_GOAL_TOTAL} subs`;
-  
-  // ODSTRANĚNO: progress pro suby
-  // const subGoalPercent = Math.min(100, (subs / SUB_GOAL_TOTAL) * 100);
-  // $("#subGoalBar").style.width = `${subGoalPercent}%`;
-  // $("#subPct").textContent = `${subGoalPercent.toFixed(1)}%`;
-
 
 // ===== API FETCH =====
 async function fetchDashboardData() {
