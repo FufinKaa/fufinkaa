@@ -57,17 +57,18 @@
       </div>
     </section>
 
-       <!-- MAIN CONTENT GRID -->
-    <section class="leftCol card">
+    <!-- LEFT COLUMN - STATS -->
+    <section class="card leftCol">
       <div class="cardHead">
         <h2>💰 Vybráno</h2>
-        <div class="muted">donates</div>
+        <div class="muted">celkem z donates</div>
       </div>
       <div class="money" id="money">600 Kč</div>
       <div class="muted" id="moneySmall">600 / 200 000 Kč</div>
       <div class="bar">
         <div class="barFill" id="moneyProgress" style="width: 0.3%"></div>
       </div>
+
       <div class="miniRow">
         <div class="mini">
           <div class="miniLabel">Suby celkem</div>
@@ -86,41 +87,32 @@
         <div class="muted">automaticky</div>
       </div>
       <ul class="rules">
-        <li>💗 T1 sub = <b>+10 min</b></li>
-        <li>💗 T2 sub = <b>+20 min</b></li>
-        <li>💗 T3 sub = <b>+30 min</b></li>
-        <li>💗 100 Kč donate = <b>+15 min</b> (poměrově)</li>
+        <li><span class="ruleIcon">💗</span> T1 sub = <strong>+10 min</strong></li>
+        <li><span class="ruleIcon">💗</span> T2 sub = <strong>+20 min</strong></li>
+        <li><span class="ruleIcon">💗</span> T3 sub = <strong>+30 min</strong></li>
+        <li><span class="ruleIcon">💗</span> 100 Kč donate = <strong>+15 min</strong> (poměrově)</li>
       </ul>
       <div class="muted tiny">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
-
-      <div class="spacer"></div>
-
-      <div class="cardHead">
-        <h2>🔗 Moje socials</h2>
-        <div class="muted">klikni a pošli lásku ✨</div>
-      </div>
-      <div class="socialsCol">
-        <a class="social ig" href="https://instagram.com/fufinka.a" target="_blank" rel="noreferrer">📸 Instagram</a>
-        <a class="social tw" href="https://twitch.tv/fufinkaa" target="_blank" rel="noreferrer">🟣 Twitch</a>
-        <a class="social yt" href="https://youtube.com/FufinKa" target="_blank" rel="noreferrer">▶️ YouTube</a>
-      </div>
     </section>
 
-    <!-- STŘED -->
-    <section class="card goals midCol">
+    <!-- MIDDLE COLUMN - GOALS -->
+    <section class="card midCol">
       <div class="cardHead">
-        <h2>🎯 Goaly</h2>
-        <div class="muted"><span id="goalHeader">600 / 200 000 Kč</span></div>
+        <h2>🎯 Donategoal</h2>
+        <div class="muted" id="goalHeader">600 / 200 000 Kč</div>
       </div>
       <div class="bar">
         <div class="barFill" id="goalBar" style="width: 0.3%"></div>
       </div>
-      <div class="goalList" id="goalList"></div>
+      <div class="goalList" id="goalList">
+        <!-- Naplní JavaScript -->
+      </div>
       <div class="muted tiny">✅ Milníky se automaticky odškrtávají podle vybraných Kč.</div>
     </section>
 
-    <!-- PRAVÝ -->
+    <!-- RIGHT COLUMN - TWITCH & SUBGOAL -->
     <section class="card rightCol">
+      <!-- TWITCH STREAM -->
       <div class="cardHead">
         <h2>🔴 Živě na Twitchi</h2>
         <div class="muted">Sleduj a přidej se do chatu! 🎮</div>
@@ -146,10 +138,19 @@
           </iframe>
         </div>
       </div>
-      <div class="streamInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; gap: 20px;">
-        <div><span style="font-size: 18px">🎁</span> 29 gifts do badge upgrade!</div>
-        <div><span style="font-size: 18px">🎯</span> 71/100 Gifts</div>
+
+      <!-- SUBGOAL -->
+      <div class="cardHead" style="margin-top: 20px;">
+        <h2>🎯 Subgoal</h2>
+        <div class="muted" id="subGoalHeader">11 / 1000 subs</div>
       </div>
+      <div class="bar">
+        <div class="barFill" id="subGoalBar" style="width: 1.1%"></div>
+      </div>
+      <div class="subGoalList" id="subGoalList">
+        <!-- Naplní JavaScript -->
+      </div>
+      <div class="muted tiny">✅ Subgoaly se automaticky odškrtávají podle počtu subů.</div>
     </section>
 
     <!-- WIDE CARDS -->
@@ -159,8 +160,8 @@
         <h2>🏆 Top 5 podporovatelů</h2>
         <div class="muted">podle Kč celkem 💜</div>
       </div>
-      <div class="tableContainer">
-        <table class="donorsTable">
+      <div class="tableWrap">
+        <table class="topTable">
           <thead>
             <tr>
               <th>#</th>
@@ -170,12 +171,7 @@
             </tr>
           </thead>
           <tbody id="topTableBody">
-            <tr>
-              <td>1</td>
-              <td>TEST</td>
-              <td>600 Kč</td>
-              <td>+90 min</td>
-            </tr>
+            <!-- Naplní JavaScript -->
           </tbody>
         </table>
       </div>
@@ -187,8 +183,8 @@
         <h2>🧾 Poslední akce</h2>
         <div class="muted">posledních 10</div>
       </div>
-      <div class="activityFeed" id="feed">
-        <!-- Activity feed will be populated by JavaScript -->
+      <div class="feed" id="feed">
+        <!-- Naplní JavaScript -->
       </div>
     </section>
   </main>
