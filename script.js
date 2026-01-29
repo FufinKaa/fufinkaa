@@ -1,5 +1,5 @@
 // ============================
-// FUFATHON Dashboard - Kompletní verze
+// FUFATHON Dashboard - Kompletní verze s emoji
 // ============================
 
 const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
@@ -9,24 +9,24 @@ const SE_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaXRhZGVsI
 
 const SUB_MINUTES = { 1: 10, 2: 20, 3: 30 };
 
-// DONATEGOAL (podle obrázku)
+// DONATEGOAL (s emoji podle obrázku)
 const GOALS = [
-  { amount: 120000, title: "ASMR stream" },
-  { amount: 125000, title: "Bolt Tower" },
-  { amount: 130000, title: "Otužování" },
-  { amount: 140000, title: "MiniGolf" },
-  { amount: 150000, title: "Vířivka" },
-  { amount: 160000, title: "Zážitkové ART studio" }
+  { amount: 120000, icon: "🎧", title: "ASMR stream" },
+  { amount: 125000, icon: "⚡", title: "Bolt Tower" },
+  { amount: 130000, icon: "🥶", title: "Otužování" },
+  { amount: 140000, icon: "⛳", title: "MiniGolf" },
+  { amount: 150000, icon: "🫧", title: "Vířivka" },
+  { amount: 160000, icon: "🎨", title: "Zážitkové ART studio" }
 ];
 
-// SUBGOAL (přesně z obrázku)
+// SUBGOAL (s emoji podle obrázku)
 const SUB_GOALS = [
-  { amount: 100, title: "Snídaně podle chatu" },
-  { amount: 200, title: "Make-up challenge" },
-  { amount: 300, title: "Outfit vybíráte vy" },
-  { amount: 400, title: "Kontrola váhy od teď" },
-  { amount: 500, title: "1v1 s chatem" },
-  { amount: 1000, title: "Subgoal hlavní" }
+  { amount: 100, icon: "🍳", title: "Snídaně podle chatu" },
+  { amount: 200, icon: "💄", title: "Make-up challenge" },
+  { amount: 300, icon: "👗", title: "Outfit vybíráte vy" },
+  { amount: 400, icon: "⚖️", title: "Kontrola váhy od teď" },
+  { amount: 500, icon: "⚔️", title: "1v1 s chatem" },
+  { amount: 1000, icon: "🏆", title: "Subgoal hlavní" }
 ];
 
 // ===== UTILITIES =====
@@ -91,8 +91,11 @@ function renderGoals(money) {
   
   const goalsHTML = GOALS.map(g => {
     return `
-      <div class="goal-item">
-        <div class="goal-name">${g.title}</div>
+      <div class="goal-row">
+        <div class="goal-name">
+          <span>${g.icon}</span>
+          <span>${g.title}</span>
+        </div>
         <div class="goal-amount">${formatKc(g.amount)} Kč</div>
       </div>
     `;
@@ -114,8 +117,11 @@ function renderSubGoals(subsTotal) {
   
   const subGoalsHTML = SUB_GOALS.map(g => {
     return `
-      <div class="goal-item">
-        <div class="goal-name">${g.title}</div>
+      <div class="goal-row">
+        <div class="goal-name">
+          <span>${g.icon}</span>
+          <span>${g.title}</span>
+        </div>
         <div class="goal-amount">${g.amount} subs</div>
       </div>
     `;
