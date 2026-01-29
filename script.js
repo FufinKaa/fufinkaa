@@ -346,38 +346,188 @@ function connectStreamElements() {
     });
   });
   
+  socket.on('authenticated', (data) => {
+    console.log('🔑 Autentizováno jako:', data.username);
+  });
+  
   socket.on('event', (data) => {
-    console.log('🎬 StreamElements event:', data.listener, data);
+    console.log('🎬 StreamElements RAW event:', data);
     
-    // AUTOMATICKÉ PŘIDÁVÁNÍ ČASU
-    if (data.listener === 'subscriber-latest') {
-      // Nový sub
-      const tier = data.event.tier || 1;
-      addTimeForSub(tier);
-      
-    } else if (data.listener === 'subscriber-gift-latest') {
-      // Gifted sub
-      const tier = data.event.tier || 1;
-      const count = data.event.amount || 1;
-      addTimeForSub(tier, count);
-      
-    } else if (data.listener === 'tip-latest') {
-      // Donate
-      const amount = data.event.amount || 0;
-      const currency = data.event.currency || 'CZK';
-      
-      let amountCzk = amount;
-      // Jednoduchá konverze (pro reálné použití bys potřeboval API pro kurzy)
-      if (currency === 'USD') amountCzk = amount * 23;
-      if (currency === 'EUR') amountCzk = amount * 25;
-      if (currency === 'GBP') amountCzk = amount * 29;
-      
-      addTimeForDonate(amountCzk);
+    // NOVÉ ZPRACOVÁNÍ - používáme data.type místo data.listener
+    if (!data || !data.type) {
+      console.log('⚠️ Neplatná událost:', data);
+      return;
+    }
+    
+    // Zpracování podle typu
+    switch (data.type) {
+      case 'subscriber':
+        // Nový sub nebo resub
+        handleSubscriberEvent(data);
+        break;
+        
+      case 'subscriber-gift':
+        // Gifted sub
+        handleGiftEvent(data);
+        break;
+        
+      case 'tip':
+        // Donate
+        handleTipEvent(data);
+        break;
+        
+      case 'follow':
+        // Follow
+        console.log('👤 Nový follow:', data.data.username);
+        break;
+        
+      case 'cheer':
+        // Bits
+        console.log('💎 Bits:', data.data.amount, 'od', data.data.username);
+        break;
+        
+      case 'host':
+        // Host
+        console.log('🏠 Host:', data.data.username);
+        break;
+        
+      case 'raid':
+        // Raid
+        console.log('⚔️ Raid:', data.data.username, 's', data.data.viewers, 'diváky');
+        break;
+        
+      default:
+        console.log('ℹ️ Nezpracovaný typ:', data.type);
     }
     
     // Načti nová data z API
     fetchDashboardData();
   });
+  
+  socket.on('error', (err) => {
+    console.error('❌ StreamElements error:', err);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('🔌 StreamElements odpojeno');
+  });
+}
+
+// ===== STREAMELEMENTS EVENT HANDLERS =====
+function handleSubscriberEvent(data) {
+  const event = data.data || {};
+  const username = event.username || event.displayName || event.name || 'Anonym';
+  const tier = event.tier || 1;
+  const months = event.months || 1;
+  const message = event.message || '';
+  const isGift = event.gifted || event.isGift || false;
+  const gifter = event.gifter || event.sender || null;
+  
+  console.log('⭐ Sub event:', {
+    username,
+    tier,
+    months,
+    isGift,
+    gifter,
+    message: message.substring(0, 50)
+  });
+  
+  if (isGift && gifter) {
+    // Gifted sub
+    saveEventToHistory({
+      type: 'gift',
+      gifter: gifter,
+      recipient: username,
+      tier: tier,
+      count: 1,
+      timestamp: Date.now(),
+      addedMinutes: SUB_MINUTES[tier] || 10
+    });
+    addTimeForSub(tier);
+    updateSubCount(tier);
+    
+  } else if (months > 1) {
+    // Resub
+    saveEventToHistory({
+      type: 'resub',
+      username: username,
+      tier: tier,
+      months: months,
+      message: message,
+      timestamp: Date.now(),
+      addedMinutes: SUB_MINUTES[tier] || 10
+    });
+    addTimeForSub(tier);
+    updateSubCount(tier);
+    
+  } else {
+    // Nový sub
+    saveEventToHistory({
+      type: 'sub',
+      username: username,
+      tier: tier,
+      months: 1,
+      message: message,
+      timestamp: Date.now(),
+      addedMinutes: SUB_MINUTES[tier] || 10
+    });
+    addTimeForSub(tier);
+    updateSubCount(tier);
+  }
+}
+
+function handleGiftEvent(data) {
+  const event = data.data || {};
+  const gifter = event.username || event.displayName || event.name || 'Anonym';
+  const tier = event.tier || 1;
+  const count = event.amount || event.count || 1;
+  
+  console.log('🎁 Gift event:', { gifter, tier, count });
+  
+  saveEventToHistory({
+    type: 'gift',
+    gifter: gifter,
+    recipient: 'Komunita',
+    tier: tier,
+    count: count,
+    timestamp: Date.now(),
+    addedMinutes: (SUB_MINUTES[tier] || 10) * count
+  });
+  
+  addTimeForSub(tier, count);
+  updateSubCount(tier, count);
+}
+
+function handleTipEvent(data) {
+  const event = data.data || {};
+  const username = event.username || event.displayName || event.name || 'Anonym';
+  const amount = event.amount || 0;
+  const currency = event.currency || 'CZK';
+  const message = event.message || '';
+  
+  console.log('💰 Tip event:', { username, amount, currency, message: message.substring(0, 50) });
+  
+  // Převod na CZK
+  let amountCzk = amount;
+  if (currency === 'USD') amountCzk = amount * 23;
+  if (currency === 'EUR') amountCzk = amount * 25;
+  if (currency === 'GBP') amountCzk = amount * 29;
+  
+  saveEventToHistory({
+    type: 'donation',
+    username: username,
+    amount: amountCzk,
+    amountOriginal: amount,
+    currency: currency,
+    message: message,
+    timestamp: Date.now(),
+    addedMinutes: Math.floor((amountCzk / 100) * 15)
+  });
+  
+  addTimeForDonate(amountCzk);
+  updateTopDonors(username, amountCzk);
+  updateTotalMoney();
+}
   
   socket.on('error', (err) => {
     console.error('❌ StreamElements error:', err);
