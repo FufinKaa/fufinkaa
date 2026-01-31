@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FUFATHON Dashboard</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+</head>
+
+<body>
+  <div class="bgGlow" aria-hidden="true"></div>
+
+  <main class="container">
+    
+    <!-- HLAVNÍ HEADER -->
+    <header class="header">
+      <h1>FUFATHON Dashboard</h1>
+      <div class="subtitle">přehled o všem ✨</div>
+      
+           <div class="header-controls">
+        <div class="status-pill">
+          <span class="live-dot"></span>
+          <span class="status-text">LIVE</span>
+        </div>
+        
+        <!-- SOCIÁLNÍ IKONKY -->
+        <div class="social-icons">
+          <a href="https://www.twitch.tv/fufinkaa" target="_blank" class="social-link" aria-label="Twitch">
+            <span class="social-icon">🔴</span>
+          </a>
+          <a href="https://www.instagram.com/fufinka.a" target="_blank" class="social-link" aria-label="Instagram">
+            <span class="social-icon">📷</span>
+          </a>
+        </div>
+        
+        <button class="theme-btn" id="themeBtn" type="button" aria-label="Přepnout den/noc">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+          <span class="theme-text" id="themeText">Noc</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="rules-pill" aria-label="Pravidla přidávání času">📜 Pravidla přidávání času</div>
+
+<section class="card rules-card" id="rules">
+  <div class="card-header">
+    <h2 class="card-title">📜 Pravidla přidávání času</h2>
+    <div class="card-subtitle">automaticky</div>
+  </div>
+  <div class="rules-list">
+    <div class="rule-pill"><span class="rule-emoji">💗</span><span class="rule-title">T1 sub</span><span class="rule-plus">+10 min</span></div>
+    <div class="rule-pill"><span class="rule-emoji">💗</span><span class="rule-title">T2 sub</span><span class="rule-plus">+20 min</span></div>
+    <div class="rule-pill"><span class="rule-emoji">💗</span><span class="rule-title">T3 sub</span><span class="rule-plus">+30 min</span></div>
+    <div class="rule-pill"><span class="rule-emoji">💗</span><span class="rule-title">100 Kč donate</span><span class="rule-plus">+15 min</span></div>
+  </div>
+  <div class="rules-note">Pozn.: donate přičítá i za 67 Kč atd. (poměrně).</div>
+</section>
+
+
+    <!-- TIMER SECTION - DVOJICE -->
+    <section class="card timer-card">
+      <div class="timer-grid single">
+        <!-- DO KONCE ZBÝVÁ -->
+        <div class="timer-box is-hidden">
+          <div class="timer-label">DO KONCE ZBÝVÁ</div>
+          <div class="timer-display" id="timeLeft">00:00:00</div>
+          <div class="timer-info" id="endsAtText">Konec: 28. 01. 2026 16:48</div>
+        </div>
+        
+        <!-- JAK DLOUHO STREAMUJI -->
+        <div class="timer-box">
+          <div class="timer-label">JAK DLOUHO STREAMUJI</div>
+          <div class="timer-display violet" id="timeRunning">00:00:00</div>
+          <div class="timer-info" id="startedAtText">Start: 09. 02. 2026 14:00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATISTIKY VEDLE SEBE -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">VYBRÁNO</div>
+        <div class="stat-value" id="money">600 Kč</div>
+        <div class="stat-sub" id="moneySmall">600 / 200 000 Kč</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Suby celkem</div>
+        <div class="stat-value" id="subsTotal">11</div>
+        <div class="stat-sub" id="subsBreak">9 / 1 / 1</div>
+      </div>
+    </div>
+
+    <!-- PROGRESS BAR - POUZE ČAS -->
+    <div class="progress-single is-hidden">
+      <div class="progress-card">
+        <div class="progress-bar">
+          <div class="progress-fill" id="timeProgress" style="width: 100%"></div>
+        </div>
+        <div class="progress-percent" id="timePct">100%</div>
+      </div>
+    </div>
+
+    <!-- GOALS SECTION - DVOJICE JAKO TABULKA -->
+    <section class="card goals-card">
+      <div class="goals-header">
+        <div class="goals-title">
+          <h2>🎯 Subgoals</h2>
+          <div class="goals-subtitle" id="subGoalHeader">11 / 1000 subs</div>
+        </div>
+        <div class="goals-title">
+          <h2>💰 Donategoal</h2>
+          <div class="goals-subtitle" id="goalHeader">600 / 200 000 Kč</div>
+        </div>
+      </div>
+      
+      <div class="goals-table">
+        <!-- LEVÝ SLOUPEC - SUBGOALS -->
+        <div class="goals-column">
+          <div class="goals-list" id="subGoalList">
+  <table class="goals-table">
+    <tbody id="subGoalTableBody"></tbody>
+  </table>
+</div>
+        </div>
+        
+        <!-- PRAVÝ SLOUPEC - DONATEGOALS -->
+        <div class="goals-column">
+          <div class="goals-list" id="goalList">
+  <table class="goals-table">
+    <tbody id="goalTableBody"></tbody>
+  </table>
+</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRAVIDLA PŘIDÁVÁNÍ ČASU -->
+<!-- TWITCH STREAM A CHAT - SAMOSTATNÝ ŘÁDEK (2 SLOUPCE) -->
+    <section class="card twitch-card">
+      <div class="card-header">
+        <h2 class="card-title">🔴 Twitch stream a chat</h2>
+        <div class="card-subtitle">Sleduj a přidej se do chatu! 🎮</div>
+      </div>
+      <div class="twitch-container">
+        <div class="twitch-stream">
+          <iframe
+            src="https://player.twitch.tv/?channel=fufinkaa&parent=fufinkaa.github.io"
+            frameborder="0"
+            allowfullscreen="true"
+            scrolling="no"
+            allow="autoplay; fullscreen"
+            title="Živý stream Fufinka">
+          </iframe>
+        </div>
+        <div class="twitch-chat">
+          <iframe
+            src="https://www.twitch.tv/embed/fufinkaa/chat?parent=fufinkaa.github.io&darkpopout"
+            frameborder="0"
+            scrolling="yes"
+            allow="autoplay"
+            title="Chat Fufinka">
+          </iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOP 5 DONÁTORŮ A POSLEDNÍ AKCE - 2 SLOUPCE -->
+    <div class="bottom-grid">
+      <!-- TOP 5 DONÁTORŮ -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">🏆 Top 5 donátorů</h2>
+          <div class="card-subtitle">podle Kč celkem 💜</div>
+        </div>
+        <div class="donors-table">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Jméno</th>
+                <th>Kč celkem</th>
+                <th>Přidaný čas</th>
+              </tr>
+            </thead>
+            <tbody id="topTableBody">
+              <!-- Naplní JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- POSLEDNÍ AKCE -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">🧾 Poslední akce</h2>
+          <div class="card-subtitle">posledních 10</div>
+        </div>
+        <div class="activity-list" id="feed">
+          <!-- Naplní JS -->
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="./script.js"></script>
+
+  <script>
+    // ⏱️ Timer: jak dlouho streamuji (od 09. 02. 2026 14:00 CET)
+    (function () {
+      const el = document.getElementById('timeRunning');
+      const info = document.getElementById('startedAtText');
+      if (!el) return;
+
+      // Start: 2026-02-09 14:00 v CZ (CET). Pokud budeš chtít jiný čas, změň tady.
+      const start = new Date('2026-02-09T14:00:00+01:00');
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      function tick() {
+        const now = new Date();
+        let diff = now - start;
+        if (diff < 0) diff = 0;
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+
+        el.textContent = (days > 0)
+          ? `${days}d ${pad(hours)}:${pad(mins)}:${pad(secs)}`
+          : `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+
+        if (info) {
+          info.textContent = 'Start: 09. 02. 2026 14:00';
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    // 🌗 Light/Dark toggle (fallback, když to neřeší script.js)
+    (function () {
+      const btn = document.getElementById('themeBtn');
+      const icon = document.getElementById('themeIcon');
+      const text = document.getElementById('themeText');
+      if (!btn) return;
+
+      const root = document.documentElement;
+      const key = 'fufathon-theme';
+
+      function apply(theme) {
+        root.setAttribute('data-theme', theme);
+        if (icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+        if (text) text.textContent = theme === 'light' ? 'Den' : 'Noc';
+      }
+
+      const saved = localStorage.getItem(key);
+      if (saved === 'light' || saved === 'dark') apply(saved);
+
+      btn.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const next = current === 'light' ? 'dark' : 'light';
+        localStorage.setItem(key, next);
+        apply(next);
+      });
+    })();
+  </script>
+
+</body>
+</html>
