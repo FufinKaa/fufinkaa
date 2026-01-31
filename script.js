@@ -8,7 +8,9 @@ const GOAL_TOTAL = 200000;
 const SUB_GOAL_TOTAL = 1000;
 
 // ===== TIMER =====
-let subathonEndTime = new Date("2026-02-09T14:00:00");
+const SUBATHON_START = new Date("2026-02-09T14:00:00"); // 9. 2. 2026 14:00
+const INITIAL_DURATION_HOURS = 24; // 24 hodin
+let subathonEndTime = new Date(SUBATHON_START.getTime() + (INITIAL_DURATION_HOURS * 60 * 60 * 1000));
 let isStreamActive = true;
 
 // DONATEGOAL - VŠECHNY GOALS Z SCREENSHOTU
