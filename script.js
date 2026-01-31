@@ -11,15 +11,53 @@ const SUB_GOAL_TOTAL = 1000;
 let subathonEndTime = new Date("2026-02-09T14:00:00");
 let isStreamActive = true;
 
-// ===== GOALS =====
+// DONATEGOAL - VŠECHNY GOALS Z SCREENSHOTU
 const GOALS = [
   { amount: 5000, icon: "🎬", title: "Movie night" },
-  // ... vlož zbytek z původního kódu (celý tvůj seznam) ...
+  { amount: 10000, icon: "😏", title: "Q&A bez cenzury" },
+  { amount: 15000, icon: "👻", title: "Horror Night" },
+  { amount: 20000, icon: "🍔", title: "Jídlo podle chatu" },
+  { amount: 25000, icon: "🤡", title: "Kostým stream" },
+  { amount: 30000, icon: "💃", title: "Just Dance" },
+  { amount: 35000, icon: "🧱", title: "Lego" },
+  { amount: 40000, icon: "🍣", title: "Asijská ochutnávka" },
+  { amount: 45000, icon: "⛏️", title: "Minecraft SpeedRun DUO" },
+  { amount: 50000, icon: "🎤", title: "Karaoke stream" },
+  { amount: 55000, icon: "🔫", title: "Battle Royale Challenge" },
+  { amount: 60000, icon: "🎳", title: "Bowling" },
+  { amount: 65000, icon: "💦", title: "Try Not To Laugh" },
+  { amount: 70000, icon: "👣", title: "Běžecký pás" },
+  { amount: 75000, icon: "🍹", title: "Drunk Stream" },
+  { amount: 80000, icon: "🧍‍♀️", title: "12h Stream ve stoje" },
+  { amount: 85000, icon: "🕹️", title: "Split Fiction w/ Juraj" },
+  { amount: 90000, icon: "🎁", title: "Mystery box opening" },
+  { amount: 95000, icon: "🏆", title: "Turnaj v LoLku" },
+  { amount: 100000, icon: "🎉", title: "Stodolní ve stylu" },
+  { amount: 110000, icon: "🏎️", title: "Motokáry" },
+  { amount: 120000, icon: "🎧", title: "ASMR stream" },
+  { amount: 125000, icon: "⚡", title: "Bolt Tower" },
+  { amount: 130000, icon: "🥶", title: "Otužování" },
+  { amount: 140000, icon: "⛳", title: "MiniGolf" },
+  { amount: 150000, icon: "🫧", title: "Vířivka" },
+  { amount: 160000, icon: "🎨", title: "Zážitkové ART studio" },
+  { amount: 170000, icon: "🐎", title: "Jízda na koni" },
+  { amount: 180000, icon: "🏔️", title: "Výšlap na Lysou horu" },
+  { amount: 190000, icon: "🖊️", title: "Tetování" },
+  { amount: 200000, icon: "🏙️", title: "Víkend v Praze" }
 ];
 
+// SUBGOAL - VŠECHNY GOALS Z SCREENSHOTU
 const SUB_GOALS = [
   { amount: 100, icon: "🍳", title: "Snídaně podle chatu" },
-  // ... vlož zbytek z původního kódu ...
+  { amount: 200, icon: "💄", title: "Make-up challenge" },
+  { amount: 300, icon: "👗", title: "Outfit vybíráte vy" },
+  { amount: 400, icon: "⚖️", title: "Kontrola váhy od teď" },
+  { amount: 500, icon: "⚔️", title: "1v1 s chatem" },
+  { amount: 600, icon: "🎮", title: "Vybíráte hru na hlavní blok dne" },
+  { amount: 700, icon: "👑", title: "Rozhoduje o dni" },
+  { amount: 800, icon: "🍽️", title: "Luxusní restaurace v Ostravě" },
+  { amount: 900, icon: "👾", title: "Turnaj ve Fortnite" },
+  { amount: 1000, icon: "🏎️", title: "Jízda ve sporťáku" }
 ];
 
 // ===== POMOCNÉ FUNKCE =====
