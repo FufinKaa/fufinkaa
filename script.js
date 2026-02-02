@@ -1,3 +1,51 @@
+// StreamElements Socket.io connection
+const initStreamElements = () => {
+  const channelId = "5ba7c85667166d9150b406fe";
+  
+  // Připojení k SE socketu
+  const socket = io('https://realtime.streamelements.com', {
+    transports: ['websocket']
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Connected to StreamElements');
+    socket.emit('authenticate', {
+      method: 'token',
+      token: localStorage.getItem('overlayToken') // Token z localStorage
+    });
+  });
+
+  socket.on('authenticated', () => {
+    console.log('✅ Authenticated with StreamElements');
+    socket.emit('join', `channel:${channelId}`);
+  });
+
+  // Posloucháme tips
+  socket.on('event', (data) => {
+    if (data.type === 'tip') {
+      console.log('💰 New tip:', data);
+      updateDashboardWithLiveData(data);
+    }
+    if (data.type === 'subscriber') {
+      console.log('🎮 New sub:', data);
+      updateDashboardWithLiveData(data);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Disconnected from StreamElements');
+  });
+};
+
+// Přidat na konec DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  // ... tvůj existující kód ...
+  
+  // Přidat StreamElements připojení
+  initStreamElements();
+});
+
+
 /* FUFATHON Dashboard — FINÁLNÍ VERZE */
 
 (function () {
