@@ -1,56 +1,9 @@
-// StreamElements Socket.io connection
-const initStreamElements = () => {
-  const channelId = "5ba7c85667166d9150b406fe";
-  
-  // Připojení k SE socketu
-  const socket = io('https://realtime.streamelements.com', {
-    transports: ['websocket']
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Connected to StreamElements');
-    socket.emit('authenticate', {
-      method: 'token',
-      token: localStorage.getItem('overlayToken') // Token z localStorage
-    });
-  });
-
-  socket.on('authenticated', () => {
-    console.log('✅ Authenticated with StreamElements');
-    socket.emit('join', `channel:${channelId}`);
-  });
-
-  // Posloucháme tips
-  socket.on('event', (data) => {
-    if (data.type === 'tip') {
-      console.log('💰 New tip:', data);
-      updateDashboardWithLiveData(data);
-    }
-    if (data.type === 'subscriber') {
-      console.log('🎮 New sub:', data);
-      updateDashboardWithLiveData(data);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Disconnected from StreamElements');
-  });
-};
-
-// Přidat na konec DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-  // ... tvůj existující kód ...
-  
-  // Přidat StreamElements připojení
-  initStreamElements();
-});
-
-
-/* FUFATHON Dashboard — FINÁLNÍ VERZE */
+/* FUFATHON Dashboard — FINÁLNÍ VERZE (POLL z Cloudflare /api/state) */
 
 (function () {
   // ========= KONFIGURACE =========
-  const API_URL = "https://fufathon-api.pajujka191.workers.dev";
+  const API_BASE = "https://fufathon-api.pajujka191.workers.dev";
+  const API_STATE = `${API_BASE}/api/state`;
   const START_AT = new Date("2026-02-09T14:00:00+01:00");
   const THEME_KEY = "fufathon-theme";
   const POLL_MS = 10000; // 10 sekund
@@ -107,6 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function pad(n) { return String(n).padStart(2, "0"); }
   function formatKc(n) { return Number(n || 0).toLocaleString("cs-CZ"); }
 
+  function safeText(el, value) {
+    if (!el) return;
+    el.textContent = value;
+  }
+
+  function fmtTime(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
   // ========= TÉMA =========
   function initTheme() {
     const btn = $("themeBtn");
@@ -145,12 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = "00:00:00";
         return;
       }
-      
+
       const seconds = Math.floor(diff / 1000);
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       const secs = seconds % 60;
-      
+
       el.textContent = `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
     }
 
@@ -159,14 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========= API =========
-  async function fetchData() {
+  async function fetchState() {
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) return null;
-      const data = await response.json();
-      return data.success === false ? null : data;
-    } catch (error) {
-      console.error("API error:", error);
+      const res = await fetch(API_STATE, { cache: "no-store" });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      console.error("API error:", e);
       return null;
     }
   }
@@ -175,9 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDonateGoals(money) {
     const body = $("goalTableBody");
     if (!body) return;
-    
+
     body.innerHTML = "";
-    
+
     DONATE_GOALS.forEach(goal => {
       const done = money >= goal.amount;
       const tr = document.createElement("tr");
@@ -194,9 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderSubGoals(subs) {
     const body = $("subGoalTableBody");
     if (!body) return;
-    
+
     body.innerHTML = "";
-    
+
     SUB_GOALS.forEach(goal => {
       const done = subs >= goal.amount;
       const tr = document.createElement("tr");
@@ -216,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!body) return;
 
     body.innerHTML = "";
-    
+
     if (!list || list.length === 0) {
       const tr = document.createElement("tr");
       tr.innerHTML = `<td colspan="4" class="muted">Zatím žádné donaty ✨</td>`;
@@ -225,25 +189,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     list.slice(0, 5).forEach((donor, idx) => {
+      const name = donor.name ?? donor.username ?? "Anonymous";
+      const amount = Number(donor.amount || 0);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx + 1}</td>
-        <td>${donor.name}</td>
-        <td>${formatKc(donor.amount)} Kč</td>
-        <td>${Math.round(donor.amount * 0.15)} min</td>
+        <td>${name}</td>
+        <td>${formatKc(amount)} Kč</td>
+        <td>${Math.round(amount * 0.15)} min</td>
       `;
       body.appendChild(tr);
     });
   }
 
   // ========= 10 POSLEDNÍCH AKCÍ =========
-  function renderRecentActivity(activities) {
+  function renderRecentActivity(events) {
     const feed = $("feed");
     if (!feed) return;
 
     feed.innerHTML = "";
-    
-    if (!activities || activities.length === 0) {
+
+    if (!events || events.length === 0) {
       const div = document.createElement("div");
       div.className = "activity-item muted";
       div.textContent = "Zatím nic nového…";
@@ -251,12 +218,31 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    activities.slice(0, 10).forEach(activity => {
+    events.slice(0, 10).forEach(ev => {
+      const type = ev.type;
+      const d = ev.data || {};
+
+      let text = "Akce";
+      if (type === "tip") {
+        const who = d.username || "Anonymous";
+        const amt = Number(d.amount || 0);
+        const cur = d.currency || "CZK";
+        text = `💰 ${who} poslal/a ${amt} ${cur}`;
+      } else if (type === "sub") {
+        const who = d.username || "Anonymous";
+        const tier = d.tier ? ` (T${d.tier})` : "";
+        text = `🎮 ${who} dal/a sub${tier}`;
+      } else if (type === "cheer") {
+        const who = d.username || "Anonymous";
+        const amt = Number(d.amount || 0);
+        text = `✨ ${who} poslal/a ${amt} bits`;
+      }
+
       const div = document.createElement("div");
       div.className = "activity-item";
       div.innerHTML = `
-        <span class="activity-time">${activity.time}</span>
-        <span class="activity-text">${activity.text}</span>
+        <span class="activity-time">${fmtTime(ev.ts || ev.time || ev.timestamp)}</span>
+        <span class="activity-text">${text}</span>
       `;
       feed.appendChild(div);
     });
@@ -264,44 +250,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ========= HLAVNÍ UPDATE =========
   async function updateDashboard() {
-    const data = await fetchData();
-    
-    if (data) {
-      const money = data.money || 0;
-      const subs = data.subs || 0;
-      
-      // Aktualizovat čísla
-      if ($("money")) $("money").textContent = `${formatKc(money)} Kč`;
-      if ($("moneySmall")) $("moneySmall").textContent = `${formatKc(money)} / 200 000 Kč`;
-      if ($("subsTotal")) $("subsTotal").textContent = subs;
-      if ($("subGoalHeader")) $("subGoalHeader").textContent = `${subs} / 1000 subs`;
-      if ($("goalHeader")) $("goalHeader").textContent = `${formatKc(money)} / 200 000 Kč`;
-      
-      // Renderovat
-      renderDonateGoals(money);
-      renderSubGoals(subs);
-      renderTopDonators(data.topDonators);
-      renderRecentActivity(data.recentActivity);
-      
-      console.log("✅ Aktualizováno:", { money, subs });
-    }
+    const state = await fetchState();
+    if (!state) return;
+
+    // Cloudflare state: totalDonations, totalSubs, topDonors, events, totalMinutes
+    const money = Number(state.totalDonations || 0);
+    const subs = Number(state.totalSubs || 0);
+
+    safeText($("money"), `${formatKc(money)} Kč`);
+    safeText($("moneySmall"), `${formatKc(money)} / 200 000 Kč`);
+    safeText($("subsTotal"), String(subs));
+    safeText($("subGoalHeader"), `${subs} / 1000 subs`);
+    safeText($("goalHeader"), `${formatKc(money)} / 200 000 Kč`);
+
+    // Pokud máš někde minuty (když ne, nic se nestane)
+    if ($("minutesTotal")) safeText($("minutesTotal"), String(state.totalMinutes || 0));
+
+    renderDonateGoals(money);
+    renderSubGoals(subs);
+    renderTopDonators(state.topDonors);
+    renderRecentActivity(state.events);
+
+    console.log("✅ Aktualizováno:", { money, subs, minutes: state.totalMinutes });
   }
 
   // ========= START =========
   document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 FUFATHON Dashboard startuje...");
-    
-    // Inicializace
+
     initTheme();
     initTimer();
-    
-    // První načtení
+
     updateDashboard();
-    
-    // Auto-update každých 10s
     setInterval(updateDashboard, POLL_MS);
-    
-    // Pro ruční update
+
     window.refreshDashboard = updateDashboard;
   });
 
