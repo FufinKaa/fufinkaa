@@ -1,9 +1,13 @@
 (function () {
 
-  const API_STATE = "https://fufathon-api.pajujka191.workers.dev/api/state";
+  // TVŮJ NOVÝ WORKER API (nahraď svou adresou!)
+  const API_BASE_URL = "https://subathon-api.pajujka191.workers.dev";
+  
+  // Zachováváme tvůj původní timer
   const POLL_MS = 10000;
   const START_AT = new Date("2026-02-09T14:00:00+01:00");
 
+  // TVÉ GOALS ZŮSTÁVAJÍ - neměň!
   const DONATE_GOALS = [
   { amount: 5000, title: "🎬 Movie night" },
   { amount: 10000, title: "😏 Q&A bez cenzury" },
@@ -36,7 +40,7 @@
   { amount: 180000, title: "⛰️ Výšlap na Lysou horu" },
   { amount: 190000, title: "✏️ Tetování" },
   { amount: 200000, title: "🏙️ Víkend v Praze" }
-];
+  ];
 
   const SUB_GOALS = [
   { amount: 100, title: "🍳 Snídaně podle chatu" },
@@ -49,23 +53,64 @@
   { amount: 800, title: "🍽️ Luxusní restaurace v Ostravě" },
   { amount: 900, title: "🏆 Turnaj ve Fortnite" },
   { amount: 1000, title: "🏎️ Jízda ve sporťáku" }
-];
+  ];
 
+  // Helper funkce zůstávají
   const $ = id => document.getElementById(id);
   const kc = n => Number(n || 0).toLocaleString("cs-CZ");
 
-  async function fetchState() {
+  // -----------------------------------------------------------------
+  // NOVÁ FUNKCE: Načítání dat z tvého Worker API
+  // -----------------------------------------------------------------
+  async function loadDashboardData() {
     try {
-      const r = await fetch(API_STATE, { cache: "no-store" });
-      if (!r.ok) throw new Error("API fail");
-      return await r.json();
-    } catch {
-      return { money: 0, subs: 0, topDonors: [], recentEvents: [] };
+      const response = await fetch(`${API_BASE_URL}/data`);
+      const data = await response.json();
+      
+      // Získání peněz a subs z nového API
+      const money = data.total.donation || 0;
+      const subs = data.total.subs || 0;
+      
+      // Aktualizace UI
+      updateUI(money, subs);
+      
+      // Zobrazení posledních akcí (nový formát)
+      renderLatestActions(data.latestActions || []);
+      
+      // Zobrazení TOP 5 donátorů (nový formát)
+      renderTopDonors(data.topDonors || []);
+      
+    } catch (error) {
+      console.error("Chyba při načítání dat:", error);
+      // Fallback na prázdná data
+      updateUI(0, 0);
+      renderLatestActions([]);
+      renderTopDonors([]);
     }
   }
 
+  // -----------------------------------------------------------------
+  // FUNKCE PRO AKTUALIZACI UI (částečně z tvého původního kódu)
+  // -----------------------------------------------------------------
+  function updateUI(money, subs) {
+    // Tvé původní aktualizace
+    $("money").textContent = kc(money) + " Kč";
+    $("moneySmall").textContent = `${kc(money)} / 200 000 Kč`;
+    $("subsTotal").textContent = subs;
+    $("goalHeader").textContent = `${kc(money)} / 200 000 Kč`;
+    $("subGoalHeader").textContent = `${subs} / 1000 subs`;
+    
+    // Tvé původní funkce pro goals - ZŮSTÁVAJÍ!
+    renderDonateGoals(money);
+    renderSubGoals(subs);
+  }
+
+  // -----------------------------------------------------------------
+  // TVÉ PŮVODNÍ FUNKCE PRO GOALS - NEMĚNÍME!
+  // -----------------------------------------------------------------
   function renderDonateGoals(money) {
     const body = $("goalTableBody");
+    if (!body) return;
     body.innerHTML = "";
     DONATE_GOALS.forEach(g => {
       body.innerHTML += `
@@ -79,6 +124,7 @@
 
   function renderSubGoals(subs) {
     const body = $("subGoalTableBody");
+    if (!body) return;
     body.innerHTML = "";
     SUB_GOALS.forEach(g => {
       body.innerHTML += `
@@ -90,39 +136,60 @@
     });
   }
 
-  function renderTopDonors(list) {
+  // -----------------------------------------------------------------
+  // UPRAVENÉ FUNKCE PRO TOP DONORY A POSLEDNÍ AKCE
+  // -----------------------------------------------------------------
+  function renderTopDonors(donors) {
     const body = $("topTableBody");
+    if (!body) return;
+    
     body.innerHTML = "";
-    if (!list.length) {
+    if (!donors.length) {
       body.innerHTML = `<tr><td colspan="4">Zatím nic ✨</td></tr>`;
       return;
     }
-    list.slice(0, 5).forEach((d, i) => {
+    
+    donors.slice(0, 5).forEach((d, i) => {
+      // Nový formát: {name: "Jméno", amount: 1000}
+      const addedTime = Math.round(d.amount * 0.15); // 100 Kč = +15 min
       body.innerHTML += `
         <tr>
           <td>${i + 1}</td>
-          <td>${d.username || "Anon"}</td>
+          <td>${d.name || "Anon"}</td>
           <td>${kc(d.amount)} Kč</td>
-          <td>${Math.round(d.amount * 0.15)} min</td>
+          <td>${addedTime} min</td>
         </tr>`;
     });
   }
 
-  function renderFeed(list) {
+  function renderLatestActions(actions) {
     const feed = $("feed");
+    if (!feed) return;
+    
     feed.innerHTML = "";
-    if (!list.length) {
+    if (!actions.length) {
       feed.innerHTML = `<div class="activity-item muted">Zatím nic…</div>`;
       return;
     }
-    list.slice(0, 10).forEach(e => {
+    
+    actions.slice(0, 10).forEach(e => {
+      // Nový formát akcí
+      const icon = e.type === "donation" ? "💰" : "🎮";
+      const actionText = e.type === "donation" ? "Donoval" : "Nový předplatitel";
+      const timeText = e.addedTime ? `+${e.addedTime} min` : "";
+      
       feed.innerHTML += `
         <div class="activity-item">
-          <span>${e.type === "sub" ? "🎮" : "💰"} ${e.data?.username || "Anon"}</span>
+          <span>${icon} ${e.name || "Anon"}</span>
+          <span class="activity-action">${actionText} ${kc(e.amount)} Kč</span>
+          <span class="activity-time">${timeText}</span>
         </div>`;
     });
   }
 
+  // -----------------------------------------------------------------
+  // TVŮJ PŮVODNÍ TIMER - NEMĚNÍME!
+  // -----------------------------------------------------------------
   function updateTimer() {
     const diff = new Date() - START_AT;
     if (diff < 0) return;
@@ -131,29 +198,18 @@
       `${Math.floor(s / 3600)}:${Math.floor(s % 3600 / 60)}:${s % 60}`;
   }
 
-  async function update() {
-    const s = await fetchState();
-
-    const money = Number(s.money || 0);
-    const subs = Number(s.subs || 0);
-
-    $("money").textContent = kc(money) + " Kč";
-    $("moneySmall").textContent = `${kc(money)} / 200 000 Kč`;
-    $("subsTotal").textContent = subs;
-    $("goalHeader").textContent = `${kc(money)} / 200 000 Kč`;
-    $("subGoalHeader").textContent = `${subs} / 1000 subs`;
-
-    renderDonateGoals(money);
-    renderSubGoals(subs);
-    renderTopDonors(s.topDonors || []);
-    renderFeed(s.recentEvents || []);
-  }
-
+  // -----------------------------------------------------------------
+  // INICIALIZACE
+  // -----------------------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
-    update();
+    // Načtení dat z tvého nového Worker API
+    loadDashboardData();
     updateTimer();
-    setInterval(update, POLL_MS);
+    
+    // Pravidelná aktualizace
+    setInterval(loadDashboardData, POLL_MS);
     setInterval(updateTimer, 1000);
   });
 
 })();
+
