@@ -111,11 +111,17 @@
     <section class="card twitch-card">
       <div class="twitch-container">
         <div class="twitch-stream">
-          <iframe src="https://player.twitch.tv/?channel=fufinkaa&parent=fufinkaa.github.io"
-                  allowfullscreen></iframe>
+          <iframe 
+            src="https://player.twitch.tv/?channel=fufinkaa&parent=fufinkaa.github.io"
+            title="Twitch stream fufinkaa"
+            allowfullscreen>
+          </iframe>
         </div>
         <div class="twitch-chat">
-          <iframe src="https://www.twitch.tv/embed/fufinkaa/chat?parent=fufinkaa.github.io"></iframe>
+          <iframe 
+            src="https://www.twitch.tv/embed/fufinkaa/chat?parent=fufinkaa.github.io"
+            title="Twitch chat fufinkaa">
+          </iframe>
         </div>
       </div>
     </section>
@@ -137,42 +143,7 @@
 
   </main>
 
-  <!-- 🔥 INLINE SCRIPT – JEDINÝ ZDROJ DAT -->
-  <script>
-    const API = "https://fufathon-api.pajujka191.workers.dev/api/state";
-    const START_AT = new Date("2026-02-09T14:00:00+01:00");
-
-    function pad(n){return String(n).padStart(2,"0")}
-
-    function updateTimer(){
-      const diff = new Date() - START_AT;
-      if(diff < 0) return;
-      const s = Math.floor(diff/1000);
-      document.getElementById("timeRunning").textContent =
-        pad(Math.floor(s/3600))+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60);
-    }
-
-    async function load(){
-      const r = await fetch(API,{cache:"no-store"});
-      const d = await r.json();
-
-      document.getElementById("money").textContent = (d.money||0).toLocaleString("cs-CZ")+" Kč";
-      document.getElementById("moneySmall").textContent = (d.money||0).toLocaleString("cs-CZ")+" / 200 000 Kč";
-      document.getElementById("subsTotal").textContent = d.subs||0;
-      document.getElementById("goalHeader").textContent = (d.money||0).toLocaleString("cs-CZ")+" / 200 000 Kč";
-      document.getElementById("subGoalHeader").textContent = (d.subs||0)+" / 1000 subs";
-
-      document.getElementById("topTableBody").innerHTML =
-        (d.topDonors||[]).map((x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td>${x.amount} Kč</td></tr>`).join("");
-
-      document.getElementById("feed").innerHTML =
-        (d.recentEvents||[]).map(e=>`<div>${new Date(e.ts).toLocaleTimeString("cs-CZ")} ${e.text}</div>`).join("");
-    }
-
-    updateTimer();
-    load();
-    setInterval(updateTimer,1000);
-    setInterval(load,10000);
-  </script>
+  <!-- 🔥 NAČTENÍ NOVÉHO SCRIPT.JS -->
+  <script src="script.js"></script>
 </body>
 </html>
