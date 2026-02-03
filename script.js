@@ -59,40 +59,58 @@
   const kc = n => Number(n || 0).toLocaleString("cs-CZ");
   const pad = n => String(n).padStart(2, "0");
 
-  // 🌙 PŘEPÍNÁNÍ DEN/NOC - OPRAVENO pro tvůj CSS systém
-  function setupThemeToggle() {
-    const themeBtn = document.getElementById('themeBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
+// 🌙 PŘEPÍNÁNÍ DEN/NOC - OPRAVENO s debugem
+function setupThemeToggle() {
+  const themeBtn = document.getElementById('themeBtn');
+  const themeIcon = document.getElementById('themeIcon');
+  const themeText = document.getElementById('themeText');
+  
+  if (!themeBtn) return;
+  
+  themeBtn.addEventListener('click', () => {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     
-    if (!themeBtn) return;
+    console.log('🔁 Přepínám z', currentTheme, 'na', newTheme);
     
-    themeBtn.addEventListener('click', () => {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      
-      // Nastav data-theme na <html> (to tvůj CSS očekává)
-      html.setAttribute('data-theme', newTheme);
-      
-      // Aktualizuj tlačítko
-      const isLight = newTheme === 'light';
-      themeIcon.textContent = isLight ? '🌙' : '☀️';
-      themeText.textContent = isLight ? 'Noc' : 'Den';
-      
-      // Ulož do localStorage
-      localStorage.setItem('theme', newTheme);
-    });
+    // Nastav data-theme na <html>
+    html.setAttribute('data-theme', newTheme);
+    
+    // Aktualizuj tlačítko
+    const isLight = newTheme === 'light';
+    themeIcon.textContent = isLight ? '🌙' : '☀️';
+    themeText.textContent = isLight ? 'Noc' : 'Den';
+    
+    // TEST: Ručně změň barvu pozadí
+    if (newTheme === 'light') {
+      document.body.style.backgroundColor = '#f8f7ff';
+      document.body.style.color = 'rgba(25, 15, 38, 0.95)';
+    } else {
+      document.body.style.backgroundColor = '#0a0714';
+      document.body.style.color = 'rgba(255, 255, 255, 0.95)';
+    }
+    
+    // Ulož do localStorage
+    localStorage.setItem('theme', newTheme);
+  });
 
-    // Načtení uloženého tématu
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    // Aktualizace tlačítka
-    const isLight = savedTheme === 'light';
-    if (themeIcon) themeIcon.textContent = isLight ? '🌙' : '☀️';
-    if (themeText) themeText.textContent = isLight ? 'Noc' : 'Den';
+  // Načtení uloženého tématu
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  console.log('📂 Načítám téma:', savedTheme);
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  
+  // Ruční nastavení při načtení
+  if (savedTheme === 'light') {
+    document.body.style.backgroundColor = '#f8f7ff';
+    document.body.style.color = 'rgba(25, 15, 38, 0.95)';
   }
+  
+  // Aktualizace tlačítka
+  const isLight = savedTheme === 'light';
+  if (themeIcon) themeIcon.textContent = isLight ? '🌙' : '☀️';
+  if (themeText) themeText.textContent = isLight ? 'Noc' : 'Den';
+}
 
   // ⏰ TIMER FUNKCE (Upraveno!)
   function updateTimer() {
