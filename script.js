@@ -55,89 +55,83 @@
   ];
 
   // 🛠️ POMOCNÉ FUNKCE
-  const $ = id => document.getElementById(id);
-  const kc = n => Number(n || 0).toLocaleString("cs-CZ");
-  const pad = n => String(n).padStart(2, "0");
+  const $ = (id) => document.getElementById(id);
+  const kc = (n) => Number(n || 0).toLocaleString("cs-CZ");
+  const pad = (n) => String(n).padStart(2, "0");
 
-  // 🌙 PŘEPÍNÁNÍ DEN/NOC - OPRAVENO pro tvůj CSS systém
+  // 🌙 PŘEPÍNÁNÍ DEN/NOC
   function setupThemeToggle() {
-    const themeBtn = document.getElementById('themeBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-    
+    const themeBtn = $("themeBtn");
+    const themeIcon = $("themeIcon");
+    const themeText = $("themeText");
+
     if (!themeBtn) return;
-    
-    themeBtn.addEventListener('click', () => {
+
+    themeBtn.addEventListener("click", () => {
       const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      
-      // Nastav data-theme na <html> (to tvůj CSS očekává)
-      html.setAttribute('data-theme', newTheme);
-      
-      // Aktualizuj tlačítko
-      const isLight = newTheme === 'light';
-      themeIcon.textContent = isLight ? '🌙' : '☀️';
-      themeText.textContent = isLight ? 'Noc' : 'Den';
-      
-      // Ulož do localStorage
-      localStorage.setItem('theme', newTheme);
+      const currentTheme = html.getAttribute("data-theme");
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+
+      html.setAttribute("data-theme", newTheme);
+
+      const isLight = newTheme === "light";
+      if (themeIcon) themeIcon.textContent = isLight ? "🌙" : "☀️";
+      if (themeText) themeText.textContent = isLight ? "Noc" : "Den";
+
+      localStorage.setItem("theme", newTheme);
     });
 
-    // Načtení uloženého tématu
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    // Aktualizace tlačítka
-    const isLight = savedTheme === 'light';
-    if (themeIcon) themeIcon.textContent = isLight ? '🌙' : '☀️';
-    if (themeText) themeText.textContent = isLight ? 'Noc' : 'Den';
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
+    const isLight = savedTheme === "light";
+    if (themeIcon) themeIcon.textContent = isLight ? "🌙" : "☀️";
+    if (themeText) themeText.textContent = isLight ? "Noc" : "Den";
   }
 
-  // ⏰ TIMER FUNKCE (Upraveno!)
+  // ⏰ TIMER FUNKCE
   function updateTimer() {
+    const el = $("timeRunning");
+    if (!el) return; // když by někdy chyběl element, ať to nespadne
+
     const now = new Date();
     const diff = now - START_AT;
-    
+
     if (diff < 0) {
-      // Pokud ještě nezačalo, ukážeme odpočet DO začátku
+      // odpočet DO začátku
       const secondsToStart = Math.floor(-diff / 1000);
       const hours = pad(Math.floor(secondsToStart / 3600));
       const minutes = pad(Math.floor((secondsToStart % 3600) / 60));
       const seconds = pad(secondsToStart % 60);
-      $("timeRunning").textContent = `-${hours}:${minutes}:${seconds}`;
-      $("timeRunning").style.color = "#ff6b6b"; // Červená pro odpočet
+      el.textContent = `-${hours}:${minutes}:${seconds}`;
+      el.style.color = "#ff6b6b";
     } else {
-      // Normální běžící čas
+      // běžící čas
       const seconds = Math.floor(diff / 1000);
       const hours = pad(Math.floor(seconds / 3600));
       const minutes = pad(Math.floor((seconds % 3600) / 60));
       const secs = pad(seconds % 60);
-      $("timeRunning").textContent = `${hours}:${minutes}:${secs}`;
-      $("timeRunning").style.color = ""; // Výchozí barva
+      el.textContent = `${hours}:${minutes}:${secs}`;
+      el.style.color = "";
     }
   }
 
   // 📊 NAČTENÍ DAT Z WORKER API
   async function loadDashboardData() {
     try {
-      const response = await fetch(`${API_BASE_URL}/data`);
+      const response = await fetch(`${API_BASE_URL}/data`, { cache: "no-store" });
       if (!response.ok) throw new Error(`API odpovědělo s ${response.status}`);
-      
+
       const data = await response.json();
-      
-      // Získání hodnot
+
       const money = data.total?.donation || 0;
       const subs = data.total?.subs || 0;
-      
-      // Aktualizace UI
+
       updateUI(money, subs);
       renderTopDonors(data.topDonors || []);
       renderLatestActions(data.latestActions || []);
-      
     } catch (error) {
       console.error("❌ Chyba při načítání dat:", error);
-      // Fallback na prázdná data
       updateUI(0, 0);
       renderTopDonors([]);
       renderLatestActions([]);
@@ -146,28 +140,26 @@
 
   // 🖥️ AKTUALIZACE UI
   function updateUI(money, subs) {
-    // Aktualizace číselných hodnot
     if ($("money")) $("money").textContent = kc(money) + " Kč";
     if ($("moneySmall")) $("moneySmall").textContent = `${kc(money)} / 200 000 Kč`;
     if ($("subsTotal")) $("subsTotal").textContent = subs;
     if ($("goalHeader")) $("goalHeader").textContent = `${kc(money)} / 200 000 Kč`;
     if ($("subGoalHeader")) $("subGoalHeader").textContent = `${subs} / 1000 subs`;
-    
-    // Vykreslení goals
+
     renderDonateGoals(money);
     renderSubGoals(subs);
   }
 
-  // 🎯 RENDER GOALS (Tvůj původní kód)
+  // 🎯 RENDER GOALS
   function renderDonateGoals(money) {
     const body = $("goalTableBody");
     if (!body) {
       console.warn("⚠️ Element #goalTableBody nebyl nalezen!");
       return;
     }
-    
+
     body.innerHTML = "";
-    DONATE_GOALS.forEach(g => {
+    DONATE_GOALS.forEach((g) => {
       const isDone = money >= g.amount;
       body.innerHTML += `
         <tr class="goal-tr ${isDone ? "done" : ""}">
@@ -184,9 +176,9 @@
       console.warn("⚠️ Element #subGoalTableBody nebyl nalezen!");
       return;
     }
-    
+
     body.innerHTML = "";
-    SUB_GOALS.forEach(g => {
+    SUB_GOALS.forEach((g) => {
       const isDone = subs >= g.amount;
       body.innerHTML += `
         <tr class="goal-tr ${isDone ? "done" : ""}">
@@ -197,64 +189,66 @@
     });
   }
 
-  // 🏆 TOP DONOŘI
+  // 🏆 TOP DONOŘI (bez minut)
   function renderTopDonors(donors) {
     const body = $("topTableBody");
     if (!body) {
       console.warn("⚠️ Element #topTableBody nebyl nalezen!");
       return;
     }
-    
+
     body.innerHTML = "";
-    
+
     if (!donors.length) {
+      // nechávám colspan=4, protože pravděpodobně máš 4 sloupce v HTML – nic to nerozbije
       body.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">Zatím žádní dárci ✨</td></tr>`;
       return;
     }
-    
+
     donors.slice(0, 5).forEach((d, i) => {
-donors.slice(0, 5).forEach((d, i) => {
-  body.innerHTML += `
-    <tr>
-      <td><strong>#${i + 1}</strong></td>
-      <td>${d.name || "Anonym"}</td>
-      <td>${kc(d.amount)} Kč</td>
-      <td></td>
-    </tr>`;
-});
+      body.innerHTML += `
+        <tr>
+          <td><strong>#${i + 1}</strong></td>
+          <td>${d.name || "Anonym"}</td>
+          <td>${kc(d.amount)} Kč</td>
+          <td></td>
+        </tr>`;
+    });
   }
 
-  // 📝 POSLEDNÍ AKCE
+  // 📝 POSLEDNÍ AKCE (bez minut + opravený text)
   function renderLatestActions(actions) {
     const feed = $("feed");
     if (!feed) {
       console.warn("⚠️ Element #feed nebyl nalezen!");
       return;
     }
-    
+
     feed.innerHTML = "";
-    
+
     if (!actions.length) {
       feed.innerHTML = `<div style="text-align:center;padding:20px;color:#888;">Zatím žádné akce…</div>`;
       return;
     }
-    
-    actions.slice(0, 10).forEach(e => {
+
+    actions.slice(0, 10).forEach((e) => {
       const icon = e.type === "donation" ? "💰" : "🎮";
-      const actionText = e.type === "donation" ? "Donoval" : "Nový předplatitel";
-      const timeText = e.addedTime ? `+${e.addedTime} min` : "";
-      const time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString("cs-CZ", { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }) : "právě teď";
-      
+
+      const time = e.timestamp
+        ? new Date(e.timestamp).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })
+        : "právě teď";
+
+      const actionText =
+        e.type === "donation"
+          ? `Donoval ${kc(e.amount)} Kč`
+          : `Sub Tier ${e.tier || "?"} (${Number(e.amount || 1)}x)`;
+
       feed.innerHTML += `
         <div class="activity-item">
           <span class="activity-time">${time}</span>
           <span class="activity-icon">${icon}</span>
           <span class="activity-name">${e.name || "Anonym"}</span>
-          <span class="activity-action">${actionText} ${kc(e.amount)} Kč</span>
-          <span class="activity-added">${timeText}</span>
+          <span class="activity-action">${actionText}</span>
         </div>`;
     });
   }
@@ -262,25 +256,19 @@ donors.slice(0, 5).forEach((d, i) => {
   // 🚀 INICIALIZACE
   document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 FUFATHON Dashboard se spouští...");
-    
-    // 1. Nastavení přepínání tématu (OPRAVENO)
+
     setupThemeToggle();
-    
-    // 2. Spuštění timeru
+
     updateTimer();
-    
-    // 3. Načtení dat
     loadDashboardData();
-    
-    // 4. Pravidelné aktualizace
+
     setInterval(updateTimer, 1000);
     setInterval(loadDashboardData, POLL_MS);
-    
-    // 5. Test připojení k Workeru
-    fetch(`${API_BASE_URL}/data`)
-      .then(r => r.json())
-      .then(data => console.log("✅ Worker API připojeno, data:", data))
-      .catch(err => console.error("❌ Nelze připojit k Worker API:", err));
-  });
 
+    // test připojení
+    fetch(`${API_BASE_URL}/data`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => console.log("✅ Worker API připojeno, data:", data))
+      .catch((err) => console.error("❌ Nelze připojit k Worker API:", err));
+  });
 })();
