@@ -18,7 +18,7 @@
     { amount: 40000, title: "🍣 Asijská ochutnávka" },
     { amount: 45000, title: "⛏️ Minecraft SpeedRun DUO" },
     { amount: 50000, title: "🎤 Karaoke stream" },
-    { amount: 55000, title: "🔫 Battle Royale Challenge" },
+    { amount: 55000, title: "🔫 Shooting Challenge" },
     { amount: 60000, title: "🎳 Bowling" },
     { amount: 65000, title: "😂 Try Not To Laugh" },
     { amount: 70000, title: "👣 Běžecký pás" },
