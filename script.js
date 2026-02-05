@@ -47,7 +47,7 @@
     { amount: 300, title: "👗 Outfit vybíráte vy" },
     { amount: 400, title: "⚖️ Kontrola váhy od teď" },
     { amount: 500, title: "⚔️ 1v1 s chatem" },
-    { amount: 600, title: "🎮 Vybíráte hru na hlavní blok dne" },
+    { amount: 600, title: "😴 Stopujeme čas na spánek" },
     { amount: 700, title: "👑 Rozhoduje o dni" },
     { amount: 800, title: "🍽️ Luxusní restaurace v Ostravě" },
     { amount: 900, title: "🏆 Turnaj ve Fortnite" },
